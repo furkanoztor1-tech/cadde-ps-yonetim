@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v17.9</title>
+    <title>CADDE PS | v18.0</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="theme-color" content="#00d2ff">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -28,14 +27,11 @@
         .log-box { flex: 1; overflow-y: auto; background: #030303; border-radius: 8px; padding: 10px; font-size: 14px; min-height: 200px; }
         .stat-card { background: #000; border: 2px solid var(--n-green); border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 10px; }
         .gizli { display: none !important; }
-        
-        /* Yükle Butonu Stili */
-        #pwa-btn { display: none; width: 100%; padding: 15px; background: var(--orange); color: #000; border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; cursor: pointer; margin-bottom: 20px; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
-
+        #pwa-btn { display: none; width: 100%; padding: 15px; background: var(--orange); color: #000; border: none; border-radius: 8px; font-weight: 900; font-family: 'Orbitron'; cursor: pointer; margin-bottom: 20px; }
         #rapor-modal { position: fixed; inset: 0; background: #000; z-index: 10000; display: none; padding: 15px; overflow-y: auto; }
         .rapor-tablo { width: 100%; border-collapse: collapse; font-size: 13px; margin-top:10px; }
         .rapor-tablo th, .rapor-tablo td { border: 1px solid #222; padding: 10px; text-align: center; }
+        .ozet-card { background: #0a0a0a; padding: 10px; border-radius: 8px; border: 1px solid #333; text-align: center; }
         @media (max-width: 768px) { .main-grid { display: flex; flex-direction: column; } }
     </style>
 </head>
@@ -43,15 +39,11 @@
 
 <div id="login-ekran">
     <div style="width: 320px; padding: 40px; background: #0a0a0a; border-top: 5px solid var(--n-blue); text-align: center; border-radius: 10px; margin: 50px auto;">
-        <h1 style="font-family:'Orbitron'; margin-bottom:20px;">CADDE PS</h1>
-        
+        <h1 style="font-family:'Orbitron';">CADDE PS</h1>
         <button id="pwa-btn" onclick="installPWA()">UYGULAMAYI YÜKLE</button>
-        
-        <input type="text" id="k" placeholder="Kullanıcı" style="width:100%; padding:12px; margin:10px 0; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:5px; box-sizing:border-box;">
-        <input type="password" id="s" placeholder="Şifre" style="width:100%; padding:12px; margin:10px 0; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:5px; box-sizing:border-box;">
+        <input type="text" id="k" placeholder="Kullanıcı" style="width:100%; padding:12px; margin:10px 0; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:5px;">
+        <input type="password" id="s" placeholder="Şifre" style="width:100%; padding:12px; margin:10px 0; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:5px;">
         <button onclick="giris()" style="width:100%; padding:15px; background:var(--n-blue); color:#000; font-weight:900; border:none; cursor:pointer; border-radius:5px;">GİRİŞ YAP</button>
-        
-        <p style="font-size:10px; color:#555; margin-top:20px;">iPhone için: Paylaş > Ana Ekana Ekle</p>
     </div>
 </div>
 
@@ -112,17 +104,17 @@
 
 <div id="rapor-modal">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h2 style="font-family:'Orbitron'; color:var(--n-blue); margin:0;">ARŞİV</h2>
+        <h2 style="font-family:'Orbitron'; color:var(--n-blue); margin:0;">Z RAPORLARI (SON 30 GÜN)</h2>
         <button onclick="document.getElementById('rapor-modal').style.display='none'" style="background:var(--red); color:#fff; border:none; padding:10px 20px; cursor:pointer; font-weight:900; border-radius:5px;">KAPAT</button>
     </div>
-    <select id="f-sube" style="padding:10px; background:#111; color:#fff; border:1px solid var(--n-blue); width:100%; margin-bottom:10px;">
+    <select id="f-sube" onchange="arsivGoster()" style="padding:10px; background:#111; color:#fff; border:1px solid var(--n-blue); width:100%; margin-bottom:10px; font-family:'Orbitron';">
         <option value="HEPSİ">TÜM ŞUBELER</option>
         <option value="CADDEPS 1">CADDEPS 1</option>
         <option value="CADDEPS 2">CADDEPS 2</option>
     </select>
-    <button onclick="arsivGoster()" style="width:100%; padding:10px; background:var(--n-green); border:none; font-weight:900; border-radius:5px; cursor:pointer;">LİSTELE</button>
+    <div id="ozet-alan" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:15px;"></div>
     <table class="rapor-tablo">
-        <thead><tr><th>Tarih</th><th>Şube</th><th>Nakit</th><th>Kart</th><th>Havale</th><th>Gider</th><th>NET</th></tr></thead>
+        <thead><tr style="background:#111; color:var(--n-blue)"><th>Tarih</th><th>Şube</th><th>Nakit</th><th>Kart</th><th>Gider</th><th>NET</th></tr></thead>
         <tbody id="z-body"></tbody>
     </table>
 </div>
@@ -132,22 +124,9 @@
     firebase.initializeApp(config);
     const db = firebase.firestore();
 
-    // --- PWA YÜKLEME MANTIĞI ---
     let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        document.getElementById('pwa-btn').style.display = 'block';
-    });
-
-    async function installPWA() {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') { document.getElementById('pwa-btn').style.display = 'none'; }
-            deferredPrompt = null;
-        }
-    }
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; document.getElementById('pwa-btn').style.display = 'block'; });
+    async function installPWA() { if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; } }
 
     let userRole = "staff", currentUserName = "", seciliTip = "Nakit", unsubs = [];
 
@@ -164,7 +143,7 @@
         else {
             db.collection("personeller").where("ad","==",k).where("sifre","==",s).get().then(snap => {
                 if(!snap.empty) basariliGiris(k, s, "staff");
-                else { alert("Giriş Hatalı!"); localStorage.removeItem('caddeUser'); }
+                else { alert("Giriş Hatalı!"); }
             });
         }
     }
@@ -215,19 +194,34 @@
 
     async function arsivGoster() {
         const sube = document.getElementById('f-sube').value;
-        const snap = await db.collection("z_raporlari").orderBy("tarih","desc").limit(30).get();
-        let h = "";
+        const snap = await db.collection("z_raporlari").orderBy("tarih_key","desc").limit(40).get();
+        let h = "", tN=0, tK=0, tG=0;
+        
         snap.forEach(doc => {
             const d = doc.data();
             if(sube === "HEPSİ" || d.sube === sube) {
                 let n = Number(d.nakit || 0), k = Number(d.kart || 0), hav = Number(d.havale || 0), g = Number(d.gider || 0);
-                h += `<tr><td>${d.tarih_key}</td><td>${d.sube}</td><td>${n}₺</td><td>${k}₺</td><td>${hav}₺</td><td style="color:red">-${g}₺</td><td style="font-weight:900;">${(n+k+hav)-g}₺</td></tr>`;
+                let net = (n + k + hav) - g;
+                tN += n; tK += k; tG += g;
+                h += `<tr>
+                    <td>${d.tarih_key || '---'}</td>
+                    <td>${d.sube}</td>
+                    <td>${n}₺</td>
+                    <td>${k}₺</td>
+                    <td style="color:var(--red)">-${g}₺</td>
+                    <td style="font-weight:900; background:rgba(0,210,255,0.05)">${net}₺</td>
+                </tr>`;
             }
         });
-        document.getElementById('z-body').innerHTML = h;
+        document.getElementById('z-body').innerHTML = h || "<tr><td colspan='6'>Kayıt Bulunamadı</td></tr>";
+        document.getElementById('ozet-alan').innerHTML = `
+            <div class="ozet-card"><small>NAKİT</small><br><b style="color:var(--n-green)">${tN}₺</b></div>
+            <div class="ozet-card"><small>KART</small><br><b style="color:var(--n-blue)">${tK}₺</b></div>
+            <div class="ozet-card"><small>GİDER</small><br><b style="color:var(--red)">${tG}₺</b></div>
+        `;
     }
 
-    async function iptal(id) { if(confirm("Silinsin mi?")) await db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    async function iptal(id) { if(confirm("İşlem silinsin mi?")) await db.collection("islemler").doc(id).update({durum:"iptal"}); }
     async function patronGuncelle() {
         const ad = document.getElementById('new-p-ad').value.trim().toLowerCase(), sif = document.getElementById('new-p-sifre').value.trim();
         if(ad && sif) { await db.collection("ayarlar").doc("patron").update({ ad, sifre:sif }); alert("Güncellendi!"); cikisYap(); }
