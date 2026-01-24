@@ -3,20 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v30.0</title>
+    <title>CADDE PS | v31.0</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
         :root { --n-blue: #00d2ff; --n-green: #39ff14; --n-purple: #bc13fe; --red: #ff4444; --orange: #ff9f43; --dark-bg: #0a0a0c; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Rajdhani', sans-serif; background: var(--dark-bg); color: #fff; overflow-x: hidden; font-weight: 600; }
-        
-        /* GİRİŞ VE GENEL CAM EFEKTİ */
-        .glass-panel { background: rgba(20, 20, 25, 0.95); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 16px; }
-        
-        #login-ekran { height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%); }
-        .login-card { width: 90%; max-width: 360px; padding: 40px 30px; text-align: center; animation: formSüzül 0.8s ease-out; }
-        @keyframes formSüzül { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         
         /* PANEL */
         .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; padding: 10px 20px; background: #050505; border-bottom: 3px solid var(--n-blue); align-items: center; }
@@ -25,40 +18,36 @@
         .t-btn { padding: 10px; border: 2px solid #333; border-radius: 6px; background: #000; color: #fff; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; font-weight: 900; opacity: 0.5; text-align: center; }
         .t-btn.active { opacity: 1; border-color: var(--n-blue); color: var(--n-blue); }
         .t-btn.active[data-val="Nakit"] { border-color: var(--n-green); color: var(--n-green); }
+        .log-box { flex: 1; overflow-y: auto; background: #030303; border-radius: 8px; padding: 10px; font-size: 14px; min-height: 250px; border: 1px solid #1a1a1a; }
         .stat-card { background: #000; border: 2px solid var(--n-green); border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 10px; }
         .gizli { display: none !important; }
 
-        /* YENİ MUHASEBE MODAL TASARIMI */
-        #rapor-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 10000; display: none; padding: 15px; overflow-y: auto; }
-        .muhasebe-konteynir { max-width: 1000px; margin: 0 auto; padding: 20px; border-radius: 20px; border: 1px solid var(--n-blue); background: #0a0a0a; box-shadow: 0 0 50px rgba(0,210,255,0.1); }
-        .tarih-secici { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 15px; background: #111; border-radius: 12px; align-items: flex-end; }
-        .tarih-secici input { background: #000; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 6px; font-family: sans-serif; }
+        /* MUHASEBE MODAL */
+        #rapor-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 10000; display: none; padding: 15px; overflow-y: auto; }
+        .muhasebe-konteynir { max-width: 1000px; margin: 0 auto; padding: 20px; border-radius: 20px; border: 1px solid var(--n-blue); background: #0a0a0a; }
+        .tarih-secici { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; padding: 15px; background: #111; border-radius: 12px; align-items: flex-end; }
+        .tarih-secici input { background: #000; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 6px; }
         .toplam-kartlar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .t-kutu { padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #222; }
+        .t-kutu { padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #222; background: #050505; }
         .t-kutu b { display: block; font-size: 20px; font-family: 'Orbitron'; margin-top: 5px; }
         
         .rapor-tablo { width: 100%; border-collapse: collapse; font-size: 12px; }
         .rapor-tablo th { background: var(--n-blue); color: #000; padding: 12px; text-transform: uppercase; }
         .rapor-tablo td { border-bottom: 1px solid #222; padding: 12px; text-align: center; }
-        
-        @media (max-width: 768px) { 
-            .main-grid { display: flex; flex-direction: column; }
-            .toplam-kartlar { grid-template-columns: 1fr 1fr; }
-            .tarih-secici { flex-direction: column; }
-        }
+        .f-btn { padding: 10px 15px; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700; }
+        .f-btn:hover { border-color: var(--n-blue); color: var(--n-blue); }
+
+        @media (max-width: 768px) { .main-grid { display: flex; flex-direction: column; } .toplam-kartlar { grid-template-columns: 1fr 1fr; } .tarih-secici { flex-direction: column; width: 100%; } .tarih-secici div { width: 100%; } .tarih-secici input { width: 100%; box-sizing: border-box; } }
     </style>
 </head>
 <body>
 
 <div id="login-ekran">
-    <div class="login-card glass-panel">
-        <h1 style="font-family:'Orbitron';">CADDE <span style="color:var(--n-blue)">PS</span></h1>
-        <p style="color:var(--n-blue); font-size:14px; margin-bottom:30px;">Güvenli Yönetim Girişi</p>
-        <div style="text-align:left; margin-bottom:15px;"><label style="font-size:11px; color:#888;">KULLANICI</label>
-        <input type="text" id="k" style="width:100%; padding:14px; background:rgba(255,255,255,0.05); border:1px solid #333; color:#fff; border-radius:10px; box-sizing:border-box;"></div>
-        <div style="text-align:left; margin-bottom:25px;"><label style="font-size:11px; color:#888;">ŞİFRE</label>
-        <input type="password" id="s" style="width:100%; padding:14px; background:rgba(255,255,255,0.05); border:1px solid #333; color:#fff; border-radius:10px; box-sizing:border-box;"></div>
-        <button onclick="giris()" style="width:100%; padding:16px; background:linear-gradient(45deg, var(--n-blue), #0072ff); border:none; color:#fff; font-family:'Orbitron'; font-weight:900; border-radius:10px; cursor:pointer;">SİSTEMİ AÇ</button>
+    <div style="width: 320px; padding: 40px; background: #0a0a0a; border-top: 5px solid var(--n-blue); text-align: center; border-radius: 10px; margin: 50px auto; border:1px solid #222;">
+        <h1 style="font-family:'Orbitron';">CADDE PS</h1>
+        <input type="text" id="k" placeholder="Kullanıcı" style="width:100%; padding:12px; margin:10px 0; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:5px;">
+        <input type="password" id="s" placeholder="Şifre" style="width:100%; padding:12px; margin:10px 0; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:5px;">
+        <button onclick="giris()" style="width:100%; padding:15px; background:var(--n-blue); color:#000; font-weight:900; border:none; cursor:pointer; border-radius:5px;">GİRİŞ YAP</button>
     </div>
 </div>
 
@@ -88,7 +77,7 @@
             <button onclick="gunuKapat()" style="width:100%; padding:15px; background:var(--orange); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; margin-top:10px;">GÜNÜ KAPAT</button>
 
             <div id="admin-area" class="gizli" style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-                <button onclick="document.getElementById('rapor-modal').style.display='block'; arsivGoster('bugun');" style="width:100%; padding:12px; background:var(--n-purple); color:#fff; border:none; font-weight:900; cursor:pointer; border-radius:6px; box-shadow:0 0 15px rgba(188,19,254,0.3);">MUHASEBE & ARŞİV</button>
+                <button onclick="document.getElementById('rapor-modal').style.display='block'; arsivGoster('bugun');" style="width:100%; padding:12px; background:var(--n-purple); color:#fff; border:none; font-weight:900; cursor:pointer; border-radius:6px;">MUHASEBE & ARŞİV</button>
             </div>
         </div>
 
@@ -109,24 +98,25 @@
 <div id="rapor-modal">
     <div class="muhasebe-konteynir">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="font-family:'Orbitron'; color:var(--n-blue); margin:0;">PROFESYONEL MUHASEBE</h2>
-            <button onclick="document.getElementById('rapor-modal').style.display='none'" style="background:var(--red); color:#fff; border:none; padding:10px 20px; cursor:pointer; font-weight:900; border-radius:8px;">KAPAT</button>
+            <h2 style="font-family:'Orbitron'; color:var(--n-blue); margin:0;">Z RAPOR ARŞİVİ</h2>
+            <button onclick="document.getElementById('rapor-modal').style.display='none'" style="background:var(--red); color:#fff; border:none; padding:10px 20px; cursor:pointer; font-weight:900; border-radius:8px;">X</button>
         </div>
 
         <div class="tarih-secici">
-            <div><label style="font-size:11px; display:block;">Başlangıç</label><input type="date" id="t-bas"></div>
-            <div><label style="font-size:11px; display:block;">Bitiş</label><input type="date" id="t-bit"></div>
-            <button class="f-btn" onclick="ozelFiltrele()" style="background:var(--n-blue); color:#000; font-weight:900; border:none; padding:10px 20px; border-radius:6px; cursor:pointer;">FİLTRELE</button>
+            <div><label style="font-size:11px; display:block; color:#888;">Başlangıç</label><input type="date" id="t-bas"></div>
+            <div><label style="font-size:11px; display:block; color:#888;">Bitiş</label><input type="date" id="t-bit"></div>
+            <button onclick="ozelFiltrele()" style="background:var(--n-blue); color:#000; font-weight:900; border:none; padding:11px 20px; border-radius:6px; cursor:pointer; height:41px;">LİSTELE</button>
             <div style="flex:1"></div>
             <button class="f-btn" onclick="arsivGoster('bugun')">Bugün</button>
             <button class="f-btn" onclick="arsivGoster('hafta')">Bu Hafta</button>
+            <button class="f-btn" onclick="arsivGoster('ay')">Bu Ay</button>
         </div>
 
         <div class="toplam-kartlar">
             <div class="t-kutu" style="border-color:var(--n-green)">NAKİT <b id="t-nakit" style="color:var(--n-green)">0₺</b></div>
             <div class="t-kutu" style="border-color:var(--n-blue)">KART <b id="t-kart" style="color:var(--n-blue)">0₺</b></div>
             <div class="t-kutu" style="border-color:var(--red)">GİDER <b id="t-gider" style="color:var(--red)">0₺</b></div>
-            <div class="t-kutu" style="border-color:var(--orange)">NET KAR <b id="t-net" style="color:var(--orange)">0₺</b></div>
+            <div class="t-kutu" style="border-color:var(--orange)">NET <b id="t-net" style="color:var(--orange)">0₺</b></div>
         </div>
 
         <div style="overflow-x:auto;">
@@ -210,16 +200,16 @@
         await batch.commit(); alert("Z Kaydedildi."); location.reload();
     }
 
-    async function arsivGoster(filtre, ozelBas = null, ozelBit = null) {
+    async function arsivGoster(tip, ozelBas = null, ozelBit = null) {
         if(userRole !== "admin") return alert("YETKİNİZ YOK!");
-        let bas, bit = new Date(); bit.setHours(23,59,59);
-        
-        if(ozelBas && ozelBit) {
-            bas = new Date(ozelBas); bas.setHours(0,0,0);
-            bit = new Date(ozelBit); bit.setHours(23,59,59);
-        } else {
-            bas = new Date(); bas.setHours(0,0,0);
-            if(filtre === 'hafta') bas.setDate(bas.getDate() - 7);
+        let bas = new Date(); bas.setHours(0,0,0,0);
+        let bit = new Date(); bit.setHours(23,59,59,999);
+
+        if(tip === 'hafta') { bas.setDate(bas.getDate() - 7); }
+        else if(tip === 'ay') { bas.setDate(1); } // Ayın 1'ine çek
+        else if(tip === 'ozel' && ozelBas && ozelBit) {
+            bas = new Date(ozelBas); bas.setHours(0,0,0,0);
+            bit = new Date(ozelBit); bit.setHours(23,59,59,999);
         }
 
         const snap = await db.collection("z_raporlari").where("ts", ">=", bas).where("ts", "<=", bit).orderBy("ts", "desc").get();
@@ -228,14 +218,14 @@
             const d = doc.data(); tN+=d.nakit; tK+=d.kart; tG+=d.gider; tNet+=d.net;
             h += `<tr><td>${d.tarih}</td><td>${d.sube}</td><td>${d.kapatan}</td><td style="color:var(--n-green)">${d.nakit}₺</td><td style="color:var(--n-blue)">${d.kart}₺</td><td style="color:var(--red)">${d.gider}₺</td><td><b>${d.net}₺</b></td></tr>`;
         });
-        document.getElementById('z-body').innerHTML = h || "<tr><td colspan='7'>Veri yok</td></tr>";
+        document.getElementById('z-body').innerHTML = h || "<tr><td colspan='7'>Veri bulunamadı</td></tr>";
         document.getElementById('t-nakit').innerText = tN+"₺"; document.getElementById('t-kart').innerText = tK+"₺"; document.getElementById('t-gider').innerText = tG+"₺"; document.getElementById('t-net').innerText = tNet+"₺";
     }
 
     function ozelFiltrele() {
         const b = document.getElementById('t-bas').value;
         const s = document.getElementById('t-bit').value;
-        if(!b || !s) return alert("Tarih seçin!");
+        if(!b || !s) return alert("Başlangıç ve Bitiş tarihini seçin!");
         arsivGoster('ozel', b, s);
     }
 
