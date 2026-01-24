@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v24.0</title>
+    <title>CADDE PS | v25.0</title>
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
         :root { --n-blue: #00d2ff; --n-green: #39ff14; --n-purple: #bc13fe; --red: #ff4444; --orange: #ff9f43; }
@@ -18,7 +20,7 @@
         .t-btn.active { opacity: 1; border-color: var(--n-blue); color: var(--n-blue); }
         .t-btn.active[data-val="Nakit"] { border-color: var(--n-green); color: var(--n-green); }
         .t-btn.active[data-val="Gider"] { border-color: var(--red); color: var(--red); }
-        .log-box { flex: 1; overflow-y: auto; background: #030303; border-radius: 8px; padding: 10px; font-size: 14px; min-height: 250px; }
+        .log-box { flex: 1; overflow-y: auto; background: #030303; border-radius: 8px; padding: 10px; font-size: 14px; min-height: 250px; border: 1px solid #1a1a1a; }
         .stat-card { background: #000; border: 2px solid var(--n-green); border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 10px; }
         .gizli { display: none !important; }
         #rapor-modal { position: fixed; inset: 0; background: #000; z-index: 10000; display: none; padding: 15px; overflow-y: auto; }
@@ -42,7 +44,7 @@
     <div class="top-bar">
         <div id="saat" style="font-family:'Orbitron'; font-size:18px;">00:00:00</div>
         <div style="text-align:center"><h2 style="font-family:'Orbitron'; margin:0; font-size:18px;">CADDE <span style="color:var(--n-blue)">PS</span></h2></div>
-        <button onclick="cikisYap()" style="background:none; border:1px solid var(--red); color:var(--red); font-size:10px; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:900;">ÇIKIŞ</button>
+        <button onclick="cikisYap()" style="background:var(--red); border:none; color:#fff; font-size:10px; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:900;">ÇIKIŞ YAP</button>
     </div>
 
     <div class="main-grid">
@@ -78,7 +80,7 @@
         </div>
 
         <div class="glass">
-            <h4 style="color:var(--n-purple); margin:0 0 10px 0;">BORÇLAR</h4>
+            <h4 style="color:var(--n-purple); margin:0 0 10px 0;">AÇIK BORÇLAR</h4>
             <div id="borc-log" class="log-box" style="margin-bottom:15px; max-height:200px;"></div>
             <h4 style="color:var(--red); margin:0 0 10px 0;">GİDERLER</h4>
             <div id="gider-log" class="log-box" style="max-height:150px;"></div>
@@ -94,7 +96,7 @@
     <table class="rapor-tablo">
         <thead>
             <tr style="background:#111; color:var(--n-blue)">
-                <th>Tarih</th><th>Şube</th><th>Personel</th><th>Nakit</th><th>Kart</th><th>Havale</th><th>Borç</th><th>Gider</th><th>NET</th>
+                <th>Tarih</th><th>Şube</th><th>Kapatan</th><th>Nakit</th><th>Kart</th><th>Havale</th><th>Borç</th><th>Gider</th><th>NET</th>
             </tr>
         </thead>
         <tbody id="z-body"></tbody>
@@ -110,12 +112,13 @@
 
     async function giris() {
         const k = document.getElementById('k').value.trim().toLowerCase(), s = document.getElementById('s').value;
+        if(!k || !s) return;
         const pDoc = await db.collection("ayarlar").doc("patron").get();
         if(k === pDoc.data().ad && s === pDoc.data().sifre) { basariliGiris(k, s, "admin"); }
         else {
             const snap = await db.collection("personeller").where("ad","==",k).where("sifre","==",s).get();
             if(!snap.empty) basariliGiris(k, s, "staff");
-            else alert("Hata!");
+            else alert("Giriş Hatalı!");
         }
     }
 
@@ -132,34 +135,31 @@
         const sName = document.getElementById('i-sube').value;
         unsubs.forEach(u => u());
         
-        // KRİTİK DÜZELTME: Hem patronun hem personelin anında görmesi için basit dinleme
         const u1 = db.collection("islemler")
             .where("sube","==",sName)
             .where("durum","==","aktif")
             .where("arsiv","==",false)
             .onSnapshot(snap => {
                 let kasa = 0, log="", gLog="", bLog="";
-                let docs = [];
-                snap.forEach(doc => docs.push({id: doc.id, ...doc.data()}));
+                let list = [];
+                snap.forEach(doc => list.push({id: doc.id, ...doc.data()}));
                 
-                // Tarihe göre manuel sıralama (Server Timestamp sorununu aşmak için)
-                docs.sort((a,b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0));
+                // Zaman damgasına göre sırala
+                list.sort((a,b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0));
 
-                docs.forEach(d => {
+                list.forEach(d => {
                     if(d.tip !== "Borç" && d.tip !== "Gider") kasa += Number(d.miktar);
                     if(d.tip === "Gider") kasa -= Number(d.miktar);
 
-                    let silBtn = "";
-                    if(userRole === "admin" || d.ekleyen === currentUserName) {
-                        silBtn = `<button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer;">SİL</button>`;
-                    }
+                    let silBtn = (userRole === "admin" || d.ekleyen === currentUserName) ? 
+                        `<button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer;">SİL</button>` : "";
 
-                    let t = d.tarih ? d.tarih.toDate() : new Date();
-                    let saatStr = t.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+                    let dateObj = d.tarih ? d.tarih.toDate() : new Date();
+                    let sStr = dateObj.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
 
                     let item = `<div style="padding:10px; border-bottom:1px solid #222;">
-                        <span style="color:var(--orange); font-size:11px;">[${saatStr}]</span> <b>${d.miktar}₺</b> - ${d.not} <br>
-                        <small style="color:var(--n-blue); font-weight:bold;">${d.ekleyen} (${d.tip})</small> ${silBtn}
+                        <span style="color:var(--orange); font-size:11px;">[${sStr}]</span> <b>${d.miktar}₺</b> - ${d.not} <br>
+                        <small style="color:var(--n-blue); font-weight:900;">${d.ekleyen}</small> <small style="color:#777;">(${d.tip})</small> ${silBtn}
                     </div>`;
 
                     if(d.tip === "Gider") gLog += item;
@@ -180,7 +180,7 @@
         await db.collection("islemler").add({ 
             miktar:m, tip:seciliTip, sube:sube, 
             not:document.getElementById('i-not').value || seciliTip, 
-            tarih: firebase.firestore.FieldValue.serverTimestamp(), // Google Sunucu Saati
+            tarih: firebase.firestore.FieldValue.serverTimestamp(),
             durum:"aktif", ekleyen:currentUserName, arsiv: false 
         });
         document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
@@ -188,9 +188,9 @@
 
     async function gunuKapat() {
         const sName = document.getElementById('i-sube').value;
-        if(!confirm("Günü kapatmak üzeresiniz?")) return;
+        if(!confirm("Bu şubeyi kapatıp Z Raporu oluşturuyorsunuz. Emin misiniz?")) return;
         const snap = await db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).get();
-        if(snap.empty) return alert("İşlem yok!");
+        if(snap.empty) return alert("Kapatılacak işlem bulunamadı!");
         let n=0, k=0, h=0, g=0, b=0, ids=[];
         snap.forEach(doc => {
             const d = doc.data();
@@ -206,12 +206,12 @@
         const batch = db.batch();
         ids.forEach(id => batch.update(db.collection("islemler").doc(id), { arsiv: true }));
         await batch.commit();
-        alert("Gün Kapandı!");
+        alert("Z Raporu Kaydedildi ve Girdiğiniz İşlemler Arşivlendi.");
         location.reload();
     }
 
     async function arsivGoster() {
-        const snap = await db.collection("z_raporlari").orderBy("ts","desc").limit(50).get();
+        const snap = await db.collection("z_raporlari").orderBy("ts","desc").limit(100).get();
         let h = "";
         snap.forEach(doc => {
             const d = doc.data();
@@ -220,10 +220,21 @@
         document.getElementById('z-body').innerHTML = h;
     }
 
-    function iptal(id) { if(confirm("SİLİNSİN Mİ?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    function cikisYap() {
+        if(confirm("Çıkış yapılıyor?")) {
+            localStorage.removeItem('caddeUser');
+            localStorage.removeItem('caddePass');
+            window.location.href = window.location.pathname + "?v=" + Date.now();
+        }
+    }
+
+    function iptal(id) { if(confirm("Silmek istediğinizden emin misiniz?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
-    window.onload = function() { const u=localStorage.getItem('caddeUser'), p=localStorage.getItem('caddePass'); if(u && p) { document.getElementById('k').value=u; document.getElementById('s').value=p; giris(); } };
+    window.onload = function() { 
+        const u=localStorage.getItem('caddeUser'), p=localStorage.getItem('caddePass'); 
+        if(u && p && !window.location.search.includes("v=")) { document.getElementById('k').value=u; document.getElementById('s').value=p; giris(); } 
+    };
 </script>
 </body>
 </html>
