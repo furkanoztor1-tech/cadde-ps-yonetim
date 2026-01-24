@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v35.1</title>
+    <title>CADDE PS | v35.2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -25,7 +25,6 @@
         .glass { background: rgba(15,15,15,0.9); border-radius: 12px; border: 2px solid #252525; padding: 15px; display: flex; flex-direction: column; }
         .t-btn { padding: 10px; border: 2px solid #333; border-radius: 6px; background: #000; color: #fff; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; font-weight: 900; opacity: 0.5; text-align: center; }
         .t-btn.active { opacity: 1; border-color: var(--n-blue); color: var(--n-blue); }
-        .t-btn.active[data-val="Nakit"] { border-color: var(--n-green); color: var(--n-green); }
         .log-box { flex: 1; overflow-y: auto; background: #030303; border-radius: 8px; padding: 10px; font-size: 14px; min-height: 250px; border: 1px solid #1a1a1a; }
         .stat-card { background: #000; border: 2px solid var(--n-green); border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 10px; }
         .gizli { display: none !important; }
@@ -43,7 +42,8 @@
         .rapor-tablo td { border-bottom: 1px solid #222; padding: 12px; text-align: center; }
         
         .wp-btn { background: #25D366 !important; color: white !important; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 11px; }
-        .tahsil-btn { background: var(--n-green); color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 900; font-size: 10px; float: right; }
+        .tahsil-btn { background: var(--n-green); color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 900; font-size: 10px; float: right; margin-left: 10px; }
+        .personel-tag { color: var(--n-blue); font-size: 10px; background: rgba(0,210,255,0.1); padding: 2px 5px; border-radius: 4px; margin-right: 5px; text-transform: uppercase; }
 
         @media (max-width: 768px) { .main-grid { display: flex; flex-direction: column; } .toplam-kartlar { grid-template-columns: 1fr 1fr; } }
     </style>
@@ -82,28 +82,23 @@
             </div>
             <input type="number" id="i-miktar" placeholder="Tutar ₺" style="width:100%; padding:15px; background:#000; border:2px solid #444; color:#fff; font-size:22px; margin-bottom:10px; border-radius:8px; box-sizing:border-box;">
             <input type="text" id="i-not" placeholder="Açıklama / İsim" style="width:100%; padding:10px; background:#000; border:1px solid #333; color:#fff; margin-bottom:12px; border-radius:8px; box-sizing:border-box;">
-            <button id="btn-kaydet" onclick="kaydet()" style="width:100%; padding:15px; background:var(--n-green); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer;">KAYDET</button>
-            <button id="btn-kapat" onclick="gunuKapat()" style="width:100%; padding:15px; background:var(--orange); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; margin-top:10px;">GÜNÜ KAPAT</button>
+            <button id="btn-kaydet" onclick="kaydet()" style="width:100%; padding:15px; background:var(--n-green); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer;">KAYDET İŞLEMİ</button>
+            <button id="btn-kapat" onclick="gunuKapat()" style="width:100%; padding:15px; background:var(--orange); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; margin-top:10px;">GÜNÜ KAPAT (Z RAPORU)</button>
 
             <div id="admin-area" class="gizli" style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-                <button onclick="document.getElementById('rapor-modal').style.display='block'; arsivGoster('bugun');" style="width:100%; padding:12px; background:var(--n-purple); color:#fff; border:none; font-weight:900; cursor:pointer; border-radius:6px; margin-bottom:10px;">MUHASEBE & ARŞİV</button>
-                <div style="background:#111; padding:10px; border-radius:8px;">
-                    <small style="color:#888;">ŞİFRE GÜNCELLE</small>
-                    <input type="password" id="yeni-sifre" placeholder="Yeni Şifre" style="width:100%; padding:8px; margin:5px 0; background:#000; border:1px solid #444; color:#fff; font-size:12px; border-radius:4px; box-sizing:border-box;">
-                    <button onclick="sifreDegistir()" style="width:100%; background:var(--n-blue); color:#000; border:none; padding:8px; font-weight:900; border-radius:4px; cursor:pointer; font-size:11px;">GÜNCELLE</button>
-                </div>
+                <button onclick="document.getElementById('rapor-modal').style.display='block'; arsivGoster('bugun');" style="width:100%; padding:12px; background:var(--n-purple); color:#fff; border:none; font-weight:900; cursor:pointer; border-radius:6px; margin-bottom:10px;">MUHASEBE & ARŞİV PANELİ</button>
             </div>
         </div>
 
         <div class="glass">
-            <div class="stat-card"><small style="color:#888;">AKTİF KASA</small><br><b id="vT" style="font-size:36px; color:var(--n-green); font-family:'Orbitron';">0₺</b></div>
+            <div class="stat-card"><small style="color:#888;">AKTİF KASA DURUMU</small><br><b id="vT" style="font-size:36px; color:var(--n-green); font-family:'Orbitron';">0₺</b></div>
             <div id="islem-log" class="log-box"></div>
         </div>
 
         <div class="glass">
-            <h4 style="color:var(--n-purple); margin:0 0 5px 0;">BORÇLAR</h4>
+            <h4 style="color:var(--n-purple); margin:0 0 5px 0;">BEKLEYEN BORÇLAR</h4>
             <div id="borc-log" class="log-box" style="margin-bottom:15px; max-height:200px;"></div>
-            <h4 style="color:var(--red); margin:0 0 5px 0;">GİDERLER</h4>
+            <h4 style="color:var(--red); margin:0 0 5px 0;">GÜNLÜK GİDERLER</h4>
             <div id="gider-log" class="log-box" style="max-height:150px;"></div>
         </div>
     </div>
@@ -116,7 +111,7 @@
             <button onclick="document.getElementById('rapor-modal').style.display='none'" style="background:var(--red); color:#fff; border:none; padding:10px 20px; cursor:pointer; font-weight:900; border-radius:8px;">KAPAT</button>
         </div>
         <div class="tarih-secici">
-            <div><label style="font-size:11px; color:#888;">ŞUBE</label><select id="f-sube"><option value="HEPSİ">TÜM ŞUBELER</option><option value="CADDEPS 1">CADDEPS 1</option><option value="CADDEPS 2">CADDEPS 2</option></select></div>
+            <div><label style="font-size:11px; color:#888;">ŞUBE SEÇ</label><select id="f-sube"><option value="HEPSİ">TÜM ŞUBELER</option><option value="CADDEPS 1">CADDEPS 1</option><option value="CADDEPS 2">CADDEPS 2</option></select></div>
             <div><label style="font-size:11px; color:#888;">BAŞLANGIÇ</label><input type="date" id="t-bas"></div>
             <div><label style="font-size:11px; color:#888;">BİTİŞ</label><input type="date" id="t-bit"></div>
             <button onclick="ozelFiltrele()" style="background:var(--n-blue); color:#000; font-weight:900; padding:11px; border:none; border-radius:6px; cursor:pointer; height:41px;">LİSTELE</button>
@@ -149,7 +144,7 @@
         else {
             const snap = await db.collection("personeller").where("ad","==",k).where("sifre","==",s).get();
             if(!snap.empty) basariliGiris(k, s, "staff");
-            else alert("Hatalı Giriş!");
+            else alert("Hatalı Giriş Bilgisi!");
         }
     }
 
@@ -173,10 +168,17 @@
                 let m = Number(d.miktar);
                 if(d.tip !== "Borç" && d.tip !== "Gider") kasa += m;
                 if(d.tip === "Gider") kasa -= m;
+                
+                let pTag = `<span class="personel-tag">${d.ekleyen || "BELİRSİZ"}</span>`;
                 let silBtn = (userRole === "admin" || d.ekleyen === currentUserName) ? `<button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer; margin-left:4px;">SİL</button>` : "";
                 let tahsilBtn = (d.tip === "Borç") ? `<button onclick="tahsilEt('${d.id}', ${d.miktar}, '${d.not}')" class="tahsil-btn">TAHSİL ET</button>` : "";
                 let dateObj = d.tarih ? d.tarih.toDate() : new Date();
-                let item = `<div style="padding:10px; border-bottom:1px solid #222;"><span style="color:var(--orange); font-size:11px;">[${dateObj.toLocaleTimeString()}]</span> <b>${d.miktar}₺</b> - ${d.not} ${silBtn} ${tahsilBtn}</div>`;
+                
+                let item = `<div style="padding:10px; border-bottom:1px solid #222; line-height:1.6;">
+                    ${pTag} <span style="color:var(--orange); font-size:11px;">[${dateObj.toLocaleTimeString()}]</span> 
+                    <br><b>${d.miktar}₺</b> - ${d.not} ${silBtn} ${tahsilBtn}
+                </div>`;
+                
                 if(d.tip === "Gider") gLog += item; else if(d.tip === "Borç") bLog += item; else log += item;
             });
             document.getElementById('vT').innerText = kasa + "₺";
@@ -186,28 +188,34 @@
     }
 
     async function tahsilEt(id, miktar, eskiNot) {
-        if(!confirm(miktar + "₺ Tahsil Edilsin mi?")) return;
+        if(!confirm(miktar + "₺ Tahsil Edilsin mi? (Kimin tahsil ettiği kayda işlenecek)")) return;
         await db.collection("islemler").doc(id).update({
             tip: "Nakit",
             not: "[BORÇ ÖDEME] " + eskiNot,
+            ekleyen: currentUserName, // Tahsilatı yapanın ismini güncelle
             tarih: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Tahsilat Yapıldı, Kasaya Eklendi.");
+        alert("Tahsilat Yapıldı, Nakit Kasaya Eklendi.");
     }
 
     async function kaydet() {
         const btn = document.getElementById('btn-kaydet');
         const m = Number(document.getElementById('i-miktar').value); if(!m) return;
-        btn.disabled = true; btn.innerText = "İŞLENİYOR...";
-        await db.collection("islemler").add({ miktar:m, tip:seciliTip, sube:document.getElementById('i-sube').value, not:document.getElementById('i-not').value || seciliTip, tarih: firebase.firestore.FieldValue.serverTimestamp(), durum:"aktif", ekleyen:currentUserName, arsiv: false });
+        btn.disabled = true; btn.innerText = "KAYDEDİLİYOR...";
+        await db.collection("islemler").add({ 
+            miktar:m, tip:seciliTip, sube:document.getElementById('i-sube').value, 
+            not:document.getElementById('i-not').value || seciliTip, 
+            tarih: firebase.firestore.FieldValue.serverTimestamp(), 
+            durum:"aktif", ekleyen:currentUserName, arsiv: false 
+        });
         document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
-        btn.disabled = false; btn.innerText = "KAYDET";
+        btn.disabled = false; btn.innerText = "KAYDET İŞLEMİ";
     }
 
     async function gunuKapat() {
         const btn = document.getElementById('btn-kapat');
         const sName = document.getElementById('i-sube').value;
-        if(!confirm("Günü Kapatmak İstiyor Musunuz?")) return;
+        if(!confirm(sName + " için Gün Sonu (Z Raporu) Alınsın mı?")) return;
         btn.disabled = true;
         const snap = await db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).get();
         if(snap.empty) { btn.disabled = false; return alert("İşlem yok!"); }
@@ -219,7 +227,7 @@
         });
         await db.collection("z_raporlari").add({ tarih: new Date().toLocaleString('tr-TR'), sube: sName, kapatan: currentUserName, nakit: n, kart: k, havale: h, gider: g, borc: b, net: (n+k+h)-g, ts: new Date() });
         const batch = db.batch(); ids.forEach(id => batch.update(db.collection("islemler").doc(id), { arsiv: true }));
-        await batch.commit(); alert("Başarıyla Kapatıldı."); location.reload();
+        await batch.commit(); alert("Girişler Arşivlendi ve Z Raporu Oluşturuldu."); location.reload();
     }
 
     async function arsivGoster(tip, ozelBas = null, ozelBit = null) {
@@ -237,32 +245,25 @@
                 h += `<tr><td>${d.tarih}</td><td>${d.sube}</td><td>${d.kapatan}</td><td style="color:var(--n-green)">${d.nakit}₺</td><td style="color:var(--n-blue)">${d.kart}₺</td><td style="color:var(--red)">${d.gider}₺</td><td><b>${d.net}₺</b></td></tr>`;
             }
         });
-        document.getElementById('z-body').innerHTML = h || "<tr><td colspan='7'>Veri bulunamadı.</td></tr>";
+        document.getElementById('z-body').innerHTML = h || "<tr><td colspan='7'>Belirtilen tarihlerde kayıt bulunamadı.</td></tr>";
         document.getElementById('t-nakit').innerText = tN+"₺"; document.getElementById('t-kart').innerText = tK+"₺"; document.getElementById('t-gider').innerText = tG+"₺"; document.getElementById('t-net').innerText = tNet+"₺";
     }
 
     function raporuWpGonder() {
-        if(mevcutRaporlar.length === 0) return alert("Listelenmiş rapor yok!");
-        let mesaj = `*CADDE PS MUHASEBE*%0A------------------%0A`;
+        if(mevcutRaporlar.length === 0) return alert("Önce raporları listeleyin!");
+        let mesaj = `*CADDE PS MUHASEBE RAPORU*%0A---------------------------%0A`;
         let tNetGenel = 0;
         mevcutRaporlar.forEach(r => {
-            mesaj += `📅 ${r.tarih}%0A🏢 ${r.sube}%0A💰 Nakit: ${r.nakit}₺ | Kart: ${r.kart}₺%0A❌ Gider: ${r.gider}₺ | ✅ NET: ${r.net}₺%0A------------------%0A`;
+            mesaj += `📅 ${r.tarih}%0A🏢 ${r.sube} | 👤 ${r.kapatan}%0A💰 Nakit: ${r.nakit}₺ | Kart: ${r.kart}₺%0A❌ Gider: ${r.gider}₺ | ✅ NET: ${r.net}₺%0A---------------------------%0A`;
             tNetGenel += r.net;
         });
-        mesaj += `%0A*TOPLAM NET KAZANÇ: ${tNetGenel}₺*`;
+        mesaj += `%0A*TOPLAM GENEL NET KAZANÇ: ${tNetGenel}₺*`;
         window.open(`https://wa.me/+905393774554?text=${mesaj}`, '_blank');
     }
 
-    async function sifreDegistir() {
-        const yeni = document.getElementById('yeni-sifre').value;
-        if(yeni.length < 4) return alert("En az 4 karakter!");
-        await db.collection("ayarlar").doc("patron").update({ sifre: yeni });
-        alert("Şifre Değişti!"); cikisYap();
-    }
-
-    function ozelFiltrele() { const b = document.getElementById('t-bas').value; const s = document.getElementById('t-bit').value; if(!b || !s) return alert("Tarih seç!"); arsivGoster('ozel', b, s); }
+    function ozelFiltrele() { const b = document.getElementById('t-bas').value; const s = document.getElementById('t-bit').value; if(!b || !s) return alert("Tarih seçimi yapınız!"); arsivGoster('ozel', b, s); }
     function cikisYap() { localStorage.clear(); location.reload(); }
-    function iptal(id) { if(confirm("Silmek istiyor musunuz?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    function iptal(id) { if(confirm("Bu işlemi iptal etmek istediğinize emin misiniz?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
     window.onload = function() { if(localStorage.getItem('cadde_is_in') === 'true') { document.getElementById('k').value = localStorage.getItem('cadde_u'); document.getElementById('s').value = localStorage.getItem('cadde_p'); giris(); } };
