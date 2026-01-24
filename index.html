@@ -3,73 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v28.0</title>
+    <title>CADDE PS | v29.0</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
         :root { --n-blue: #00d2ff; --n-green: #39ff14; --n-purple: #bc13fe; --red: #ff4444; --orange: #ff9f43; --dark-bg: #0a0a0c; }
-        
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Rajdhani', sans-serif; background: var(--dark-bg); color: #fff; overflow-x: hidden; font-weight: 600; }
         
-        /* PROFESYONEL GİRİŞ EKRANI TASARIMI */
-        #login-ekran { 
-            height: 100vh; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%);
-        }
-        .login-card {
-            width: 90%;
-            max-width: 360px;
-            padding: 40px 30px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-            text-align: center;
-            animation: formSüzül 0.8s ease-out;
-        }
+        /* GİRİŞ EKRANI */
+        #login-ekran { height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1a1a2e 0%, #000 100%); }
+        .login-card { width: 90%; max-width: 360px; padding: 40px 30px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; backdrop-filter: blur(15px); text-align: center; animation: formSüzül 0.8s ease-out; }
         @keyframes formSüzül { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .login-card h1 { font-family: 'Orbitron'; font-size: 28px; margin-bottom: 5px; letter-spacing: 2px; }
-        .login-card p { color: var(--n-blue); font-size: 14px; margin-bottom: 30px; opacity: 0.8; }
-        
         .input-group { margin-bottom: 20px; text-align: left; }
-        .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; margin-left: 5px; text-transform: uppercase; }
-        .input-group input {
-            width: 100%;
-            padding: 15px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #333;
-            border-radius: 12px;
-            color: #fff;
-            font-size: 16px;
-            box-sizing: border-box;
-            transition: 0.3s;
-        }
-        .input-group input:focus { border-color: var(--n-blue); outline: none; background: rgba(0,210,255,0.05); box-shadow: 0 0 15px rgba(0,210,255,0.2); }
-        
-        .login-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(45deg, var(--n-blue), #0072ff);
-            border: none;
-            border-radius: 12px;
-            color: #fff;
-            font-family: 'Orbitron';
-            font-weight: 900;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-            box-shadow: 0 10px 20px rgba(0,114,255,0.3);
-            transition: 0.3s;
-        }
-        .login-btn:active { transform: scale(0.98); }
+        .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 5px; text-transform: uppercase; }
+        .input-group input { width: 100%; padding: 15px; background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 12px; color: #fff; font-size: 16px; box-sizing: border-box; }
+        .login-btn { width: 100%; padding: 16px; background: linear-gradient(45deg, var(--n-blue), #0072ff); border: none; border-radius: 12px; color: #fff; font-family: 'Orbitron'; font-weight: 900; cursor: pointer; }
 
-        /* PANEL TASARIMI (ESKİSİYLE AYNI) */
+        /* PANEL */
         .top-bar { display: grid; grid-template-columns: 1fr 2fr 1fr; padding: 10px 20px; background: #050505; border-bottom: 3px solid var(--n-blue); align-items: center; }
         .main-grid { display: grid; grid-template-columns: 340px 1fr 340px; gap: 20px; padding: 20px; box-sizing: border-box; }
         .glass { background: rgba(15,15,15,0.9); border-radius: 12px; border: 2px solid #252525; padding: 15px; display: flex; flex-direction: column; }
@@ -93,21 +44,11 @@
 
 <div id="login-ekran">
     <div class="login-card">
-        <h1>CADDE <span style="color:var(--n-blue)">PS</span></h1>
-        <p>Yönetim Paneline Giriş Yapın</p>
-        
-        <div class="input-group">
-            <label>Kullanıcı Adı</label>
-            <input type="text" id="k" placeholder="Adınızı girin">
-        </div>
-        
-        <div class="input-group">
-            <label>Şifre</label>
-            <input type="password" id="s" placeholder="••••••••">
-        </div>
-        
+        <h1 style="font-family:'Orbitron';">CADDE <span style="color:var(--n-blue)">PS</span></h1>
+        <p style="color:var(--n-blue); font-size:14px; margin-bottom:30px;">Yönetim Paneline Giriş Yapın</p>
+        <div class="input-group"><label>Kullanıcı Adı</label><input type="text" id="k" placeholder="Adınız"></div>
+        <div class="input-group"><label>Şifre</label><input type="password" id="s" placeholder="••••••••"></div>
         <button class="login-btn" onclick="giris()">GİRİŞ YAP</button>
-        <div style="margin-top:20px; font-size:10px; color:#444; letter-spacing:1px;">SECURE ACCESS v28.0</div>
     </div>
 </div>
 
@@ -202,7 +143,7 @@
         else {
             const snap = await db.collection("personeller").where("ad","==",k).where("sifre","==",s).get();
             if(!snap.empty) basariliGiris(k, s, "staff");
-            else alert("Giriş Hatalı!");
+            else alert("Hatalı Giriş!");
         }
     }
 
@@ -212,6 +153,7 @@
         document.getElementById('login-ekran').style.display = 'none';
         document.getElementById('panel').classList.remove('gizli');
         if(role === "admin") document.getElementById('admin-area').classList.remove('gizli');
+        else document.getElementById('admin-area').classList.add('gizli');
         verileriGetir();
     }
 
@@ -247,9 +189,9 @@
 
     async function gunuKapat() {
         const sName = document.getElementById('i-sube').value;
-        if(!confirm("Günü Kapat?")) return;
+        if(!confirm("Günü Kapatmak İstiyor musunuz?")) return;
         const snap = await db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).get();
-        if(snap.empty) return alert("İşlem yok!");
+        if(snap.empty) return alert("Kapatılacak işlem yok!");
         let n=0, k=0, h=0, g=0, b=0, ids=[];
         snap.forEach(doc => {
             const d = doc.data();
@@ -258,14 +200,22 @@
         });
         await db.collection("z_raporlari").add({ tarih: new Date().toLocaleString('tr-TR'), sube: sName, kapatan: currentUserName, nakit: n, kart: k, havale: h, gider: g, borc: b, net: (n+k+h)-g, ts: new Date() });
         const batch = db.batch(); ids.forEach(id => batch.update(db.collection("islemler").doc(id), { arsiv: true }));
-        await batch.commit(); alert("Z Kaydedildi."); location.reload();
+        await batch.commit(); alert("Z Raporu Kaydedildi."); location.reload();
     }
 
     async function arsivGoster(filtre) {
+        // GÜVENLİK: Eğer admin değilse veriyi asla çekme
+        if(userRole !== "admin") {
+            alert("BU ALANA ERİŞİM YETKİNİZ YOK!");
+            document.getElementById('rapor-modal').style.display = 'none';
+            return;
+        }
+
         let bitis = new Date(); let baslangic = new Date(); baslangic.setHours(0,0,0,0);
         if(filtre === 'dün') { baslangic.setDate(baslangic.getDate() - 1); bitis.setDate(bitis.getDate() - 1); bitis.setHours(23,59,59); }
         else if(filtre === 'hafta') { baslangic.setDate(baslangic.getDate() - 7); }
         else if(filtre === 'ay') { baslangic.setDate(1); }
+        
         const snap = await db.collection("z_raporlari").where("ts", ">=", baslangic).where("ts", "<=", bitis).get();
         let h = "", tN=0, tK=0, tG=0, tNet=0;
         snap.forEach(doc => { const d = doc.data(); tN += d.nakit; tK += d.kart; tG += d.gider; tNet += d.net; h += `<tr><td>${d.tarih}</td><td>${d.sube}</td><td>${d.kapatan}</td><td>${d.nakit}₺</td><td>${d.kart}₺</td><td>${d.havale}₺</td><td>${d.borc}₺</td><td>${d.gider}₺</td><td><b>${d.net}₺</b></td></tr>`; });
@@ -273,8 +223,8 @@
         document.getElementById('t-nakit').innerText = tN; document.getElementById('t-kart').innerText = tK; document.getElementById('t-gider').innerText = tG; document.getElementById('t-net').innerText = tNet;
     }
 
-    function cikisYap() { if(confirm("Çıkış?")) { localStorage.clear(); location.href = location.href.split('?')[0]; } }
-    function iptal(id) { if(confirm("Silinsin mi?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    function cikisYap() { if(confirm("Çıkış Yapılsın mı?")) { localStorage.clear(); location.href = location.href.split('?')[0]; } }
+    function iptal(id) { if(confirm("İşlem silinsin mi?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
     window.onload = function() { 
