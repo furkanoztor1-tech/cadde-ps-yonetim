@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v25.0</title>
+    <title>CADDE PS | v26.1</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -44,7 +44,7 @@
     <div class="top-bar">
         <div id="saat" style="font-family:'Orbitron'; font-size:18px;">00:00:00</div>
         <div style="text-align:center"><h2 style="font-family:'Orbitron'; margin:0; font-size:18px;">CADDE <span style="color:var(--n-blue)">PS</span></h2></div>
-        <button onclick="cikisYap()" style="background:var(--red); border:none; color:#fff; font-size:10px; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:900;">ÇIKIŞ YAP</button>
+        <button onclick="cikisYap()" style="background:var(--red); border:none; color:#fff; font-size:10px; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:900;">ÇIKIŞ YAP</button>
     </div>
 
     <div class="main-grid">
@@ -111,20 +111,29 @@
     let userRole = "staff", currentUserName = "", seciliTip = "Nakit", unsubs = [];
 
     async function giris() {
-        const k = document.getElementById('k').value.trim().toLowerCase(), s = document.getElementById('s').value;
+        const k = document.getElementById('k').value.trim().toLowerCase();
+        const s = document.getElementById('s').value;
         if(!k || !s) return;
+
         const pDoc = await db.collection("ayarlar").doc("patron").get();
-        if(k === pDoc.data().ad && s === pDoc.data().sifre) { basariliGiris(k, s, "admin"); }
-        else {
+        if(k === pDoc.data().ad && s === pDoc.data().sifre) {
+            basariliGiris(k, s, "admin");
+        } else {
             const snap = await db.collection("personeller").where("ad","==",k).where("sifre","==",s).get();
             if(!snap.empty) basariliGiris(k, s, "staff");
-            else alert("Giriş Hatalı!");
+            else alert("Kullanıcı veya Şifre Yanlış!");
         }
     }
 
     function basariliGiris(u, p, role) {
-        localStorage.setItem('caddeUser', u); localStorage.setItem('caddePass', p);
-        userRole = role; currentUserName = u.toUpperCase();
+        // SAYFA YENİLENİNCE ATMAYAN HAFIZA (localStorage)
+        localStorage.setItem('cadde_is_in', 'true');
+        localStorage.setItem('cadde_u', u);
+        localStorage.setItem('cadde_p', p);
+        
+        userRole = role; 
+        currentUserName = u.toUpperCase();
+        
         document.getElementById('login-ekran').classList.add('gizli');
         document.getElementById('panel').classList.remove('gizli');
         if(role === "admin") document.getElementById('admin-area').classList.remove('gizli');
@@ -143,17 +152,13 @@
                 let kasa = 0, log="", gLog="", bLog="";
                 let list = [];
                 snap.forEach(doc => list.push({id: doc.id, ...doc.data()}));
-                
-                // Zaman damgasına göre sırala
                 list.sort((a,b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0));
 
                 list.forEach(d => {
                     if(d.tip !== "Borç" && d.tip !== "Gider") kasa += Number(d.miktar);
                     if(d.tip === "Gider") kasa -= Number(d.miktar);
-
                     let silBtn = (userRole === "admin" || d.ekleyen === currentUserName) ? 
                         `<button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer;">SİL</button>` : "";
-
                     let dateObj = d.tarih ? d.tarih.toDate() : new Date();
                     let sStr = dateObj.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
 
@@ -161,7 +166,6 @@
                         <span style="color:var(--orange); font-size:11px;">[${sStr}]</span> <b>${d.miktar}₺</b> - ${d.not} <br>
                         <small style="color:var(--n-blue); font-weight:900;">${d.ekleyen}</small> <small style="color:#777;">(${d.tip})</small> ${silBtn}
                     </div>`;
-
                     if(d.tip === "Gider") gLog += item;
                     else if(d.tip === "Borç") bLog += item;
                     else log += item;
@@ -188,9 +192,9 @@
 
     async function gunuKapat() {
         const sName = document.getElementById('i-sube').value;
-        if(!confirm("Bu şubeyi kapatıp Z Raporu oluşturuyorsunuz. Emin misiniz?")) return;
+        if(!confirm("Günü Kapat?")) return;
         const snap = await db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).get();
-        if(snap.empty) return alert("Kapatılacak işlem bulunamadı!");
+        if(snap.empty) return alert("İşlem yok!");
         let n=0, k=0, h=0, g=0, b=0, ids=[];
         snap.forEach(doc => {
             const d = doc.data();
@@ -206,7 +210,7 @@
         const batch = db.batch();
         ids.forEach(id => batch.update(db.collection("islemler").doc(id), { arsiv: true }));
         await batch.commit();
-        alert("Z Raporu Kaydedildi ve Girdiğiniz İşlemler Arşivlendi.");
+        alert("Z Raporu Kaydedildi.");
         location.reload();
     }
 
@@ -221,19 +225,28 @@
     }
 
     function cikisYap() {
-        if(confirm("Çıkış yapılıyor?")) {
-            localStorage.removeItem('caddeUser');
-            localStorage.removeItem('caddePass');
-            window.location.href = window.location.pathname + "?v=" + Date.now();
+        if(confirm("Çıkış Yapılsın mı?")) {
+            localStorage.clear();
+            location.href = location.href.split('?')[0]; // Temiz sayfa
         }
     }
 
-    function iptal(id) { if(confirm("Silmek istediğinizden emin misiniz?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    function iptal(id) { if(confirm("Silinsin mi?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
-    window.onload = function() { 
-        const u=localStorage.getItem('caddeUser'), p=localStorage.getItem('caddePass'); 
-        if(u && p && !window.location.search.includes("v=")) { document.getElementById('k').value=u; document.getElementById('s').value=p; giris(); } 
+
+    // SAYFA YÜKLENİNCE OTOMATİK DEVAM ET
+    window.onload = function() {
+        const isIn = localStorage.getItem('cadde_is_in');
+        if(isIn === 'true') {
+            const u = localStorage.getItem('cadde_u');
+            const p = localStorage.getItem('cadde_p');
+            if(u && p) {
+                document.getElementById('k').value = u;
+                document.getElementById('s').value = p;
+                giris();
+            }
+        }
     };
 </script>
 </body>
