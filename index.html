@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v22.0</title>
+    <title>CADDE PS | v23.0</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -20,13 +20,12 @@
         .t-btn.active { opacity: 1; border-color: var(--n-blue); color: var(--n-blue); }
         .t-btn.active[data-val="Nakit"] { border-color: var(--n-green); color: var(--n-green); }
         .t-btn.active[data-val="Gider"] { border-color: var(--red); color: var(--red); }
-        .log-box { flex: 1; overflow-y: auto; background: #030303; border-radius: 8px; padding: 10px; font-size: 14px; min-height: 200px; }
+        .log-box { flex: 1; overflow-y: auto; background: #030303; border-radius: 8px; padding: 10px; font-size: 14px; min-height: 250px; }
         .stat-card { background: #000; border: 2px solid var(--n-green); border-radius: 10px; padding: 15px; text-align: center; margin-bottom: 10px; }
         .gizli { display: none !important; }
         #rapor-modal { position: fixed; inset: 0; background: #000; z-index: 10000; display: none; padding: 15px; overflow-y: auto; }
         .rapor-tablo { width: 100%; border-collapse: collapse; font-size: 11px; margin-top:10px; }
         .rapor-tablo th, .rapor-tablo td { border: 1px solid #222; padding: 8px; text-align: center; }
-        .ozet-card { background: #0a0a0a; padding: 10px; border-radius: 8px; border: 1px solid #333; text-align: center; }
         @media (max-width: 768px) { .main-grid { display: flex; flex-direction: column; } }
     </style>
 </head>
@@ -68,7 +67,7 @@
             <button onclick="gunuKapat()" style="width:100%; padding:15px; background:var(--orange); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; margin-top:10px;">GÜNÜ KAPAT (Z RAPORU)</button>
 
             <div id="admin-area" class="gizli" style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
-                <button onclick="document.getElementById('rapor-modal').style.display='block'; arsivGoster();" style="width:100%; padding:10px; background:var(--n-purple); color:#fff; border:none; font-weight:900; cursor:pointer; border-radius:6px;">Z RAPORLARI ARŞİVİ</button>
+                <button onclick="document.getElementById('rapor-modal').style.display='block'; arsivGoster();" style="width:100%; padding:10px; background:var(--n-purple); color:#fff; border:none; font-weight:900; cursor:pointer; border-radius:6px;">Z RAPORU ARŞİVİ</button>
             </div>
         </div>
 
@@ -81,9 +80,9 @@
         </div>
 
         <div class="glass">
-            <h4 style="color:var(--n-purple); margin:0 0 10px 0;">AÇIK BORÇLAR</h4>
+            <h4 style="color:var(--n-purple); margin:0 0 10px 0;">BORÇLAR</h4>
             <div id="borc-log" class="log-box" style="margin-bottom:15px; max-height:200px;"></div>
-            <h4 style="color:var(--red); margin:0 0 10px 0;">GİDERLER (AKTİF)</h4>
+            <h4 style="color:var(--red); margin:0 0 10px 0;">GİDERLER</h4>
             <div id="gider-log" class="log-box" style="max-height:150px;"></div>
         </div>
     </div>
@@ -94,19 +93,10 @@
         <h2 style="font-family:'Orbitron'; color:var(--n-blue); margin:0;">Z RAPORU ARŞİVİ</h2>
         <button onclick="document.getElementById('rapor-modal').style.display='none'" style="background:var(--red); color:#fff; border:none; padding:10px 20px; cursor:pointer; font-weight:900; border-radius:5px;">KAPAT</button>
     </div>
-    <div id="z-rapor-ozet" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:15px;"></div>
     <table class="rapor-tablo">
         <thead>
             <tr style="background:#111; color:var(--n-blue)">
-                <th>Kapanış Tarihi</th>
-                <th>Şube</th>
-                <th>Kapatan</th>
-                <th>Nakit</th>
-                <th>Kart</th>
-                <th>Havale</th>
-                <th>Borç</th>
-                <th>Gider</th>
-                <th>NET KASA</th>
+                <th>Tarih</th><th>Şube</th><th>Personel</th><th>Nakit</th><th>Kart</th><th>Havale</th><th>Borç</th><th>Gider</th><th>NET</th>
             </tr>
         </thead>
         <tbody id="z-body"></tbody>
@@ -122,13 +112,12 @@
 
     async function giris() {
         const k = document.getElementById('k').value.trim().toLowerCase(), s = document.getElementById('s').value;
-        const p = await db.collection("ayarlar").doc("patron").get();
-        if(k === p.data().ad && s === p.data().sifre) { basariliGiris(k, s, "admin"); }
+        const pDoc = await db.collection("ayarlar").doc("patron").get();
+        if(k === pDoc.data().ad && s === pDoc.data().sifre) { basariliGiris(k, s, "admin"); }
         else {
-            db.collection("personeller").where("ad","==",k).where("sifre","==",s).get().then(snap => {
-                if(!snap.empty) basariliGiris(k, s, "staff");
-                else alert("Hata!");
-            });
+            const snap = await db.collection("personeller").where("ad","==",k).where("sifre","==",s).get();
+            if(!snap.empty) basariliGiris(k, s, "staff");
+            else alert("Kullanıcı adı veya şifre hatalı!");
         }
     }
 
@@ -145,78 +134,71 @@
         const sName = document.getElementById('i-sube').value;
         unsubs.forEach(u => u());
         
-        // 1. Aktif İşlemler (Z raporuna girmemişler)
-        const u1 = db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).onSnapshot(snap => {
-            let kasa = 0, log="", gLog="";
-            snap.forEach(doc => {
-                const d = doc.data();
-                if(d.tip === "Nakit" || d.tip === "Kart" || d.tip === "Havale") kasa += Number(d.miktar);
-                else if(d.tip === "Gider") kasa -= Number(d.miktar);
-                let sil = (userRole === "admin") ? `<button onclick="iptal('${doc.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px;">SİL</button>` : "";
-                let item = `<div style="padding:10px; border-bottom:1px solid #222;"><b>${d.miktar}₺</b> - ${d.not} <br><small>${d.ekleyen} - ${d.tip}</small> ${sil}</div>`;
-                if(d.tip === "Gider") gLog += item; else if(d.tip !== "Borç") log += item;
-            });
-            document.getElementById('vT').innerText = kasa + "₺";
-            document.getElementById('islem-log').innerHTML = log;
-            document.getElementById('gider-log').innerHTML = gLog;
-        });
+        // Şube bazlı ve arşivlenmemiş tüm işlemleri dinle
+        const u1 = db.collection("islemler")
+            .where("sube","==",sName)
+            .where("durum","==","aktif")
+            .where("arsiv","==",false)
+            .orderBy("tarih", "desc")
+            .onSnapshot(snap => {
+                let kasa = 0, log="", gLog="", bLog="";
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if(d.tip !== "Borç" && d.tip !== "Gider") kasa += Number(d.miktar);
+                    if(d.tip === "Gider") kasa -= Number(d.miktar);
 
-        // 2. Borçlar (Arşivlenmiş olsa bile ödenene kadar durur)
-        const u2 = db.collection("islemler").where("sube","==",sName).where("tip","==","Borç").where("durum","==","aktif").onSnapshot(snap => {
-            let bLog = "";
-            snap.forEach(doc => {
-                const d = doc.data();
-                bLog += `<div style="padding:10px; border-bottom:1px solid #222; border-left:3px solid var(--n-purple);">
-                    <b>${d.miktar}₺</b> - ${d.not} <br><small>${d.ekleyen}</small>
-                    <button onclick="borcOde('${doc.id}', ${d.miktar}, '${d.not}')" style="float:right; background:var(--n-green); color:#000; border:none; padding:4px 8px; border-radius:4px; font-weight:900; font-size:10px; cursor:pointer;">ÖDE</button>
-                </div>`;
+                    // SİLME YETKİSİ: Patron her şeyi silebilir, Personel sadece kendi girdiğini silebilir.
+                    let silBtn = "";
+                    if(userRole === "admin" || d.ekleyen === currentUserName) {
+                        silBtn = `<button onclick="iptal('${doc.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer;">SİL</button>`;
+                    }
+
+                    let item = `<div style="padding:10px; border-bottom:1px solid #222;">
+                        <b>${d.miktar}₺</b> - ${d.not} <br>
+                        <small style="color:var(--n-blue)">${d.ekleyen} - ${d.tip}</small> ${silBtn}
+                    </div>`;
+
+                    if(d.tip === "Gider") gLog += item;
+                    else if(d.tip === "Borç") bLog += item;
+                    else log += item;
+                });
+                document.getElementById('vT').innerText = kasa + "₺";
+                document.getElementById('islem-log').innerHTML = log || "İşlem yok";
+                document.getElementById('gider-log').innerHTML = gLog || "Gider yok";
+                document.getElementById('borc-log').innerHTML = bLog || "Borç yok";
             });
-            document.getElementById('borc-log').innerHTML = bLog || "Açık borç yok.";
-        });
-        unsubs.push(u1, u2);
+        unsubs.push(u1);
     }
 
     async function kaydet() {
         const m = Number(document.getElementById('i-miktar').value); if(!m) return;
+        const sube = document.getElementById('i-sube').value;
         await db.collection("islemler").add({ 
-            miktar:m, tip:seciliTip, sube:document.getElementById('i-sube').value, 
+            miktar:m, tip:seciliTip, sube:sube, 
             not:document.getElementById('i-not').value || seciliTip, 
             tarih:new Date(), durum:"aktif", ekleyen:currentUserName, arsiv: false 
         });
         document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
     }
 
-    async function borcOde(id, miktar, not) {
-        if(!confirm("Bu borç ödendi olarak kasaya işlensin mi?")) return;
-        const sube = document.getElementById('i-sube').value;
-        // 1. Borcu kapat
-        await db.collection("islemler").doc(id).update({ durum: "odendi" });
-        // 2. Kasaya nakit girişi yap
-        await db.collection("islemler").add({
-            miktar: miktar, tip: "Nakit", sube: sube, not: "BORÇ ÖDEMESİ: " + not,
-            tarih: new Date(), durum: "aktif", ekleyen: currentUserName, arsiv: false
-        });
-        alert("Borç tahsil edildi ve nakit kasaya eklendi.");
-    }
-
     async function gunuKapat() {
         const sName = document.getElementById('i-sube').value;
-        if(!confirm("Dükkanı kapatıyor ve Z raporu oluşturuyorsunuz?")) return;
+        if(!confirm("Z Raporu oluşturulacak, emin misiniz?")) return;
         const snap = await db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).get();
-        if(snap.empty) { alert("İşlem yok!"); return; }
+        if(snap.empty) return alert("Kapatılacak işlem yok!");
 
-        let n=0, k=0, hav=0, g=0, b=0, ids=[];
+        let n=0, k=0, h=0, g=0, b=0, ids=[];
         snap.forEach(doc => {
             const d = doc.data();
             if(d.tip==="Nakit") n+=Number(d.miktar); else if(d.tip==="Kart") k+=Number(d.miktar);
-            else if(d.tip==="Havale") hav+=Number(d.miktar); else if(d.tip==="Gider") g+=Number(d.miktar);
+            else if(d.tip==="Havale") h+=Number(d.miktar); else if(d.tip==="Gider") g+=Number(d.miktar);
             else if(d.tip==="Borç") b+=Number(d.miktar);
             ids.push(doc.id);
         });
 
         await db.collection("z_raporlari").add({
             tarih: new Date().toLocaleString('tr-TR'), sube: sName, kapatan: currentUserName,
-            nakit: n, kart: k, havale: hav, gider: g, borc: b, net: (n+k+hav)-g, ts: new Date()
+            nakit: n, kart: k, havale: h, gider: g, borc: b, net: (n+k+h)-g, ts: new Date()
         });
 
         const batch = db.batch();
@@ -228,24 +210,25 @@
 
     async function arsivGoster() {
         const snap = await db.collection("z_raporlari").orderBy("ts","desc").limit(50).get();
-        let h = "";
+        let html = "";
         snap.forEach(doc => {
             const d = doc.data();
-            h += `<tr>
+            html += `<tr>
                 <td>${d.tarih}</td><td>${d.sube}</td><td>${d.kapatan}</td>
-                <td style="color:var(--n-green)">${d.nakit}₺</td><td style="color:var(--n-blue)">${d.kart}₺</td>
-                <td style="color:var(--orange)">${d.havale}₺</td><td style="color:var(--n-purple)">${d.borc}₺</td>
-                <td style="color:var(--red)">-${d.gider}₺</td><td style="background:#111; font-weight:900;">${d.net}₺</td>
+                <td>${d.nakit}₺</td><td>${d.kart}₺</td><td>${d.havale}₺</td>
+                <td>${d.borc}₺</td><td>${d.gider}₺</td><td style="font-weight:900">${d.net}₺</td>
             </tr>`;
         });
-        document.getElementById('z-body').innerHTML = h;
+        document.getElementById('z-body').innerHTML = html;
     }
 
-    function cikisYap() { localStorage.removeItem('caddeUser'); localStorage.removeItem('caddePass'); location.reload(); }
-    function iptal(id) { if(confirm("Sil?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    function iptal(id) { if(confirm("İşlemi iptal etmek istediğinize emin misiniz?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
-    window.onload = function() { const u=localStorage.getItem('caddeUser'), p=localStorage.getItem('caddePass'); if(u && p) { document.getElementById('k').value=u; document.getElementById('s').value=p; giris(); } };
+    window.onload = function() { 
+        const u=localStorage.getItem('caddeUser'), p=localStorage.getItem('caddePass'); 
+        if(u && p) { document.getElementById('k').value=u; document.getElementById('s').value=p; giris(); } 
+    };
 </script>
 </body>
 </html>
