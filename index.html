@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v23.0</title>
-    
+    <title>CADDE PS | v24.0</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
         :root { --n-blue: #00d2ff; --n-green: #39ff14; --n-purple: #bc13fe; --red: #ff4444; --orange: #ff9f43; }
@@ -117,7 +115,7 @@
         else {
             const snap = await db.collection("personeller").where("ad","==",k).where("sifre","==",s).get();
             if(!snap.empty) basariliGiris(k, s, "staff");
-            else alert("Kullanıcı adı veya şifre hatalı!");
+            else alert("Hata!");
         }
     }
 
@@ -134,28 +132,34 @@
         const sName = document.getElementById('i-sube').value;
         unsubs.forEach(u => u());
         
-        // Şube bazlı ve arşivlenmemiş tüm işlemleri dinle
+        // KRİTİK DÜZELTME: Hem patronun hem personelin anında görmesi için basit dinleme
         const u1 = db.collection("islemler")
             .where("sube","==",sName)
             .where("durum","==","aktif")
             .where("arsiv","==",false)
-            .orderBy("tarih", "desc")
             .onSnapshot(snap => {
                 let kasa = 0, log="", gLog="", bLog="";
-                snap.forEach(doc => {
-                    const d = doc.data();
+                let docs = [];
+                snap.forEach(doc => docs.push({id: doc.id, ...doc.data()}));
+                
+                // Tarihe göre manuel sıralama (Server Timestamp sorununu aşmak için)
+                docs.sort((a,b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0));
+
+                docs.forEach(d => {
                     if(d.tip !== "Borç" && d.tip !== "Gider") kasa += Number(d.miktar);
                     if(d.tip === "Gider") kasa -= Number(d.miktar);
 
-                    // SİLME YETKİSİ: Patron her şeyi silebilir, Personel sadece kendi girdiğini silebilir.
                     let silBtn = "";
                     if(userRole === "admin" || d.ekleyen === currentUserName) {
-                        silBtn = `<button onclick="iptal('${doc.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer;">SİL</button>`;
+                        silBtn = `<button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer;">SİL</button>`;
                     }
 
+                    let t = d.tarih ? d.tarih.toDate() : new Date();
+                    let saatStr = t.toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'});
+
                     let item = `<div style="padding:10px; border-bottom:1px solid #222;">
-                        <b>${d.miktar}₺</b> - ${d.not} <br>
-                        <small style="color:var(--n-blue)">${d.ekleyen} - ${d.tip}</small> ${silBtn}
+                        <span style="color:var(--orange); font-size:11px;">[${saatStr}]</span> <b>${d.miktar}₺</b> - ${d.not} <br>
+                        <small style="color:var(--n-blue); font-weight:bold;">${d.ekleyen} (${d.tip})</small> ${silBtn}
                     </div>`;
 
                     if(d.tip === "Gider") gLog += item;
@@ -176,17 +180,17 @@
         await db.collection("islemler").add({ 
             miktar:m, tip:seciliTip, sube:sube, 
             not:document.getElementById('i-not').value || seciliTip, 
-            tarih:new Date(), durum:"aktif", ekleyen:currentUserName, arsiv: false 
+            tarih: firebase.firestore.FieldValue.serverTimestamp(), // Google Sunucu Saati
+            durum:"aktif", ekleyen:currentUserName, arsiv: false 
         });
         document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
     }
 
     async function gunuKapat() {
         const sName = document.getElementById('i-sube').value;
-        if(!confirm("Z Raporu oluşturulacak, emin misiniz?")) return;
+        if(!confirm("Günü kapatmak üzeresiniz?")) return;
         const snap = await db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).get();
-        if(snap.empty) return alert("Kapatılacak işlem yok!");
-
+        if(snap.empty) return alert("İşlem yok!");
         let n=0, k=0, h=0, g=0, b=0, ids=[];
         snap.forEach(doc => {
             const d = doc.data();
@@ -195,40 +199,31 @@
             else if(d.tip==="Borç") b+=Number(d.miktar);
             ids.push(doc.id);
         });
-
         await db.collection("z_raporlari").add({
             tarih: new Date().toLocaleString('tr-TR'), sube: sName, kapatan: currentUserName,
             nakit: n, kart: k, havale: h, gider: g, borc: b, net: (n+k+h)-g, ts: new Date()
         });
-
         const batch = db.batch();
         ids.forEach(id => batch.update(db.collection("islemler").doc(id), { arsiv: true }));
         await batch.commit();
-        alert("Z Raporu Kaydedildi!");
+        alert("Gün Kapandı!");
         location.reload();
     }
 
     async function arsivGoster() {
         const snap = await db.collection("z_raporlari").orderBy("ts","desc").limit(50).get();
-        let html = "";
+        let h = "";
         snap.forEach(doc => {
             const d = doc.data();
-            html += `<tr>
-                <td>${d.tarih}</td><td>${d.sube}</td><td>${d.kapatan}</td>
-                <td>${d.nakit}₺</td><td>${d.kart}₺</td><td>${d.havale}₺</td>
-                <td>${d.borc}₺</td><td>${d.gider}₺</td><td style="font-weight:900">${d.net}₺</td>
-            </tr>`;
+            h += `<tr><td>${d.tarih}</td><td>${d.sube}</td><td>${d.kapatan}</td><td>${d.nakit}₺</td><td>${d.kart}₺</td><td>${d.havale}₺</td><td>${d.borc}₺</td><td>${d.gider}₺</td><td><b>${d.net}₺</b></td></tr>`;
         });
-        document.getElementById('z-body').innerHTML = html;
+        document.getElementById('z-body').innerHTML = h;
     }
 
-    function iptal(id) { if(confirm("İşlemi iptal etmek istediğinize emin misiniz?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    function iptal(id) { if(confirm("SİLİNSİN Mİ?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
-    window.onload = function() { 
-        const u=localStorage.getItem('caddeUser'), p=localStorage.getItem('caddePass'); 
-        if(u && p) { document.getElementById('k').value=u; document.getElementById('s').value=p; giris(); } 
-    };
+    window.onload = function() { const u=localStorage.getItem('caddeUser'), p=localStorage.getItem('caddePass'); if(u && p) { document.getElementById('k').value=u; document.getElementById('s').value=p; giris(); } };
 </script>
 </body>
 </html>
