@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v35.4</title>
+    <title>CADDE PS | v35.4 - Borç Korumalı</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -33,7 +33,6 @@
         .muhasebe-konteynir { max-width: 1100px; margin: 0 auto; padding: 20px; border-radius: 20px; border: 1px solid var(--n-blue); background: #0a0a0a; }
         .tarih-secici { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 15px; background: #111; border-radius: 12px; align-items: flex-end; }
         .tarih-secici input, .tarih-secici select { background: #000; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 6px; }
-        /* KART SAYISI 5'E ÇIKTIĞI İÇİN GRID AYARI GÜNCELLENDİ */
         .toplam-kartlar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
         .t-kutu { padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #222; }
         .t-kutu b { display: block; font-size: 20px; font-family: 'Orbitron'; margin-top: 5px; }
@@ -195,7 +194,6 @@
                 if(d.tip !== "Borç" && d.tip !== "Gider") kasa += m;
                 if(d.tip === "Gider") kasa -= m;
                 
-                // TARİH VE SAAT FORMATLAMA
                 let fZaman = "--:--";
                 if(d.tarih) {
                     const dateObj = new Date(d.tarih.seconds * 1000);
@@ -205,7 +203,6 @@
                 let silBtn = (userRole === "admin" || d.ekleyen === currentUserName) ? `<button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer; margin-left:5px;">SİL</button>` : "";
                 let tahsilBtn = (d.tip === "Borç") ? `<button onclick="tahsilEt('${d.id}', ${d.miktar}, '${d.not}')" class="tahsil-btn">TAHSİL ET</button>` : "";
                 
-                // LOG SATIRINA SAAT EKLENDİ
                 let item = `<div style="padding:10px; border-bottom:1px solid #222;">
                                 <span class="personel-tag">${d.ekleyen || "???"}</span>
                                 <small style="color:#666; font-size:10px;">${fZaman}</small><br>
@@ -237,15 +234,42 @@
         if(!confirm(sName + " Z Raporu Alınsın mı?")) return;
         const snap = await db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).get();
         if(snap.empty) return alert("Kayıt yok!");
-        let n=0, k=0, h=0, g=0, b=0, ids=[];
+        
+        let n=0, k=0, h=0, g=0, b=0, ids_to_archive=[];
+        
         snap.forEach(doc => {
             const d = doc.data();
-            if(d.tip==="Nakit") n+=d.miktar; else if(d.tip==="Kart") k+=d.miktar; else if(d.tip==="Havale") h+=d.miktar; else if(d.tip==="Gider") g+=d.miktar; else if(d.tip==="Borç") b+=d.miktar;
-            ids.push(doc.id);
+            if(d.tip==="Nakit") n+=d.miktar; 
+            else if(d.tip==="Kart") k+=d.miktar; 
+            else if(d.tip==="Havale") h+=d.miktar; 
+            else if(d.tip==="Gider") g+=d.miktar; 
+            else if(d.tip==="Borç") b+=d.miktar;
+            
+            // KRİTİK DÜZELTME: Borç tipindeki işlemler arşive gitmesin (arsiv: true olmasın)
+            if(d.tip !== "Borç") {
+                ids_to_archive.push(doc.id);
+            }
         });
-        await db.collection("z_raporlari").add({ tarih: new Date().toLocaleString('tr-TR'), sube: sName, kapatan: currentUserName, nakit: n, kart: k, havale: h, gider: g, borc: b, net: (n+k+h)-g, ts: new Date() });
-        const batch = db.batch(); ids.forEach(id => batch.update(db.collection("islemler").doc(id), { arsiv: true }));
-        await batch.commit(); alert("Z Raporu Kaydedildi."); location.reload();
+
+        await db.collection("z_raporlari").add({ 
+            tarih: new Date().toLocaleString('tr-TR'), 
+            sube: sName, 
+            kapatan: currentUserName, 
+            nakit: n, 
+            kart: k, 
+            havale: h, 
+            gider: g, 
+            borc: b, 
+            net: (n+k+h)-g, 
+            ts: new Date() 
+        });
+
+        const batch = db.batch(); 
+        ids_to_archive.forEach(id => batch.update(db.collection("islemler").doc(id), { arsiv: true }));
+        await batch.commit(); 
+        
+        alert("Z Raporu Kaydedildi. (Borçlar Aktif Bırakıldı)"); 
+        location.reload();
     }
 
     async function arsivGoster(tip, ozelBas = null, ozelBit = null) {
@@ -261,7 +285,6 @@
             if(fSube === "HEPSİ" || d.sube === fSube) {
                 mevcutRaporlar.push(d); 
                 tN+=d.nakit; tK+=d.kart; tH+=(d.havale || 0); tG+=d.gider; tNet+=d.net;
-                
                 h = `<tr><td>${d.tarih}</td><td>${d.sube}</td><td>${d.kapatan}</td><td>${d.nakit}₺</td><td>${d.kart}₺</td><td>${d.havale || 0}₺</td><td>${d.gider}₺</td><td><b>${d.net}₺</b></td></tr>` + h;
                 gEtiket.push(d.tarih.split(' ')[0]); gNakit.push(d.nakit); gKart.push(d.kart);
             }
@@ -269,7 +292,7 @@
         document.getElementById('z-body').innerHTML = h || "<tr><td colspan='8'>Kayıt yok.</td></tr>";
         document.getElementById('t-nakit').innerText = tN+"₺"; 
         document.getElementById('t-kart').innerText = tK+"₺"; 
-        document.getElementById('t-havale').innerText = tH+"₺"; // HAVALE KUTUSU GÜNCELLEME
+        document.getElementById('t-havale').innerText = tH+"₺"; 
         document.getElementById('t-gider').innerText = tG+"₺"; 
         document.getElementById('t-net').innerText = tNet+"₺";
         grafikCiz(gEtiket, gNakit, gKart);
