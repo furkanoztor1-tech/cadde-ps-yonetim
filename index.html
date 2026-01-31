@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CADDE PS | v35.4 - Borç Korumalı</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -245,7 +249,6 @@
             else if(d.tip==="Gider") g+=d.miktar; 
             else if(d.tip==="Borç") b+=d.miktar;
             
-            // KRİTİK DÜZELTME: Borç tipindeki işlemler arşive gitmesin (arsiv: true olmasın)
             if(d.tip !== "Borç") {
                 ids_to_archive.push(doc.id);
             }
@@ -345,6 +348,11 @@
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
     window.onload = function() { if(localStorage.getItem('cadde_is_in') === 'true') { document.getElementById('k').value = localStorage.getItem('cadde_u'); document.getElementById('s').value = localStorage.getItem('cadde_p'); giris(); } };
+
+    // --- Uygulama Yükleme Servisi (Hiçbir şeyi bozmadan eklendi) ---
+    if ('service-worker' in navigator) {
+        navigator.service-worker.register('sw.js').catch(err => console.log("SW hatası:", err));
+    }
 </script>
 </body>
 </html>
