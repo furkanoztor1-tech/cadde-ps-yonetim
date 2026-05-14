@@ -3,53 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | SCROLL</title>
+    <title>CADDE PS | PENCERE SİSTEMİ</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600;700&display=swap');
-        :root { --n-blue: #00d2ff; --n-green: #39ff14; --red: #ff4444; --orange: #ff9f43; --dark-bg: #0a0a0c; }
-        body { margin: 0; font-family: 'Rajdhani', sans-serif; background: var(--dark-bg); color: #fff; overflow-x: hidden; }
-        .container { padding: 10px; max-width: 600px; margin: auto; padding-bottom: 50px; }
+        :root { --n-blue: #00d2ff; --n-green: #39ff14; --red: #ff4444; --dark-bg: #0a0a0c; }
         
-        /* KASA KARTI */
-        .stat-card { background: #000; border: 2px solid var(--n-green); border-radius: 15px; padding: 15px; text-align: center; margin-bottom: 15px; }
-        
-        /* GİRİŞ ALANI */
-        .glass { background: #111; border-radius: 15px; border: 1px solid #222; padding: 15px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 10px; background: #000; border: 1px solid #333; color: #fff; border-radius: 10px; box-sizing: border-box; font-size: 16px; font-family: 'Rajdhani'; }
+        body { margin: 0; font-family: 'Rajdhani', sans-serif; background: var(--dark-bg); color: #fff; height: 100vh; overflow: hidden; }
+        .main-wrapper { display: flex; flex-direction: column; height: 100vh; padding: 10px; box-sizing: border-box; gap: 10px; }
 
-        /* BUTONLAR */
-        .t-btn-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 15px; }
-        .t-btn { padding: 10px 2px; border: 1px solid #333; text-align: center; font-size: 11px; cursor: pointer; border-radius: 8px; background: #000; font-weight: bold; }
+        /* ÜST KISIM SABİT */
+        .top-area { flex-shrink: 0; }
+        .stat-card { background: #000; border: 1px solid var(--n-green); border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 10px; }
+        .glass { background: #111; border-radius: 12px; border: 1px solid #222; padding: 10px; }
+        
+        input, select { width: 100%; padding: 10px; margin-bottom: 5px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; font-family: 'Rajdhani'; box-sizing: border-box; }
+        .t-btn-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 10px; }
+        .t-btn { padding: 8px 2px; border: 1px solid #333; text-align: center; font-size: 10px; border-radius: 6px; background: #000; color: #777; }
         .t-btn.active { border-color: var(--n-blue); color: var(--n-blue); }
-        .btn-green { width: 100%; padding: 18px; background: var(--n-green); color: #000; font-weight: 900; border: none; border-radius: 12px; cursor: pointer; font-family: 'Orbitron'; font-size: 14px; }
+        .btn-green { width: 100%; padding: 12px; background: var(--n-green); color: #000; font-weight: bold; border: none; border-radius: 8px; font-family: 'Orbitron'; cursor: pointer; }
 
-        /* SENİN İSTEDİĞİN KAYDIRILABİLİR PENCERE (SCROLL BOX) */
-        .scroll-window { 
-            background: #050505; 
+        /* BAĞIMSIZ PENCERELER (HER BİRİ KENDİ İÇİNDE SAYFA) */
+        .window-container { flex-grow: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+        
+        .pencere { 
+            display: flex; 
+            flex-direction: column; 
+            background: #080808; 
             border: 1px solid #1a1a1a; 
             border-radius: 12px; 
-            max-height: 250px; /* Pencere boyutu: Yaklaşık 3-4 borç sığar, fazlası için kaydırılır */
-            overflow-y: auto;  /* Aşağı doğru kaydırma özelliği */
-            margin-bottom: 10px;
+            flex: 1; /* Pencereler ekranı eşit paylaşır */
+            overflow: hidden; 
         }
         
-        /* Scrollbar'ı güzelleştirme (Modern görünüm) */
-        .scroll-window::-webkit-scrollbar { width: 4px; }
-        .scroll-window::-webkit-scrollbar-thumb { background: var(--n-blue); border-radius: 10px; }
+        .pencere-baslik { 
+            background: #111; 
+            padding: 6px 12px; 
+            font-family: 'Orbitron'; 
+            font-size: 11px; 
+            color: var(--n-blue); 
+            border-bottom: 1px solid #222;
+        }
 
-        .section-title { font-family: 'Orbitron'; font-size: 12px; color: var(--n-blue); margin: 15px 0 8px 5px; text-transform: uppercase; }
-        
-        .islem-item { padding: 12px; border-bottom: 1px solid #151515; position: relative; }
-        .action-btn { padding: 8px 12px; font-size: 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+        .pencere-icerik { 
+            flex-grow: 1; 
+            overflow-y: auto; /* Kendi içinde kaydırma */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .islem-item { padding: 10px; border-bottom: 1px solid #151515; position: relative; font-size: 14px; }
+        .action-btn { padding: 6px 10px; font-size: 10px; border-radius: 4px; border: none; font-weight: bold; margin-top: 5px; cursor: pointer; }
+
+        /* Scrollbar Gizleme/İnceltme */
+        .pencere-icerik::-webkit-scrollbar { width: 3px; }
+        .pencere-icerik::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
 <body>
 
 <div id="login-ekran" style="height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;">
-    <div style="width:100%; max-width:320px; padding:30px; background:#111; border-radius:20px; text-align:center; border:1px solid #222;">
-        <h2 style="font-family:'Orbitron'">CADDE <span style="color:var(--n-blue)">PS</span></h2>
+    <div style="width:100%; max-width:300px; text-align:center;">
+        <h2 style="font-family:'Orbitron'">CADDE PS</h2>
         <input type="text" id="k" placeholder="Kullanıcı">
         <input type="password" id="s" placeholder="Şifre">
         <button onclick="giris()" class="btn-green" style="background:var(--n-blue); color:#fff;">GİRİŞ</button>
@@ -57,42 +72,51 @@
 </div>
 
 <div id="panel" style="display:none;">
-    <div class="container">
-        <!-- KASA -->
-        <div class="stat-card">
-            <small style="color:#555;">GÜNCEL KASA</small><br>
-            <b id="vT" style="font-size:35px; color:var(--n-green); font-family:'Orbitron'">0₺</b>
-        </div>
-
-        <!-- KAYIT -->
-        <div class="glass">
-            <select id="i-sube" onchange="verileriGetir()">
-                <option value="CADDEPS 1">ŞUBE 1</option>
-                <option value="CADDEPS 2">ŞUBE 2</option>
-            </select>
-            <div class="t-btn-group">
-                <div class="t-btn active" onclick="sec(this, 'Nakit')">NAKİT</div>
-                <div class="t-btn" onclick="sec(this, 'Kart')">KART</div>
-                <div class="t-btn" onclick="sec(this, 'Havale')">HAVALE</div>
-                <div class="t-btn" onclick="sec(this, 'Gider')">GİDER</div>
-                <div class="t-btn" onclick="sec(this, 'Borç')">BORÇ</div>
+    <div class="main-wrapper">
+        
+        <div class="top-area">
+            <div class="stat-card">
+                <b id="vT" style="font-size:28px; color:var(--n-green); font-family:'Orbitron'">0₺</b>
             </div>
-            <input type="number" id="i-miktar" placeholder="Tutar ₺">
-            <input type="text" id="i-not" placeholder="Not (Müşteri adı vb.)">
-            <button onclick="kaydet()" class="btn-green">KAYDET</button>
+
+            <div class="glass">
+                <select id="i-sube" onchange="verileriGetir()">
+                    <option value="CADDEPS 1">ŞUBE 1</option>
+                    <option value="CADDEPS 2">ŞUBE 2</option>
+                </select>
+                <div class="t-btn-group">
+                    <div class="t-btn active" onclick="sec(this, 'Nakit')">NAKİT</div>
+                    <div class="t-btn" onclick="sec(this, 'Kart')">KART</div>
+                    <div class="t-btn" onclick="sec(this, 'Havale')">HAVALE</div>
+                    <div class="t-btn" onclick="sec(this, 'Gider')">GİDER</div>
+                    <div class="t-btn" onclick="sec(this, 'Borç')">BORÇ</div>
+                </div>
+                <input type="number" id="i-miktar" placeholder="Tutar ₺">
+                <input type="text" id="i-not" placeholder="Not...">
+                <button onclick="kaydet()" class="btn-green">KAYDET</button>
+            </div>
         </div>
 
-        <!-- KAYDIRILABİLİR BORÇ PENCERESİ -->
-        <div class="section-title">AÇIK BORÇLAR (KAYDIRILABİLİR)</div>
-        <div id="borc-log" class="scroll-window"></div>
+        <div class="window-container">
+            <!-- PENCERE 1: BORÇLAR -->
+            <div class="pencere">
+                <div class="pencere-baslik">AÇIK BORÇLAR</div>
+                <div id="borc-log" class="pencere-icerik"></div>
+            </div>
 
-        <!-- BUGÜNKÜ İŞLEMLER PENCERESİ -->
-        <div class="section-title">BUGÜNKÜ İŞLEMLER</div>
-        <div id="islem-log" class="scroll-window" style="max-height: 200px;"></div>
+            <!-- PENCERE 2: BUGÜNKÜ İŞLEMLER -->
+            <div class="pencere">
+                <div class="pencere-baslik">BUGÜNKÜ İŞLEMLER</div>
+                <div id="islem-log" class="pencere-icerik"></div>
+            </div>
 
-        <!-- GİDERLER PENCERESİ -->
-        <div class="section-title">GİDERLER</div>
-        <div id="gider-log" class="scroll-window" style="max-height: 150px;"></div>
+            <!-- PENCERE 3: GİDERLER -->
+            <div class="pencere">
+                <div class="pencere-baslik">GİDERLER</div>
+                <div id="gider-log" class="pencere-icerik"></div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -142,14 +166,14 @@
                     else if(d.tip === "Gider") kasa -= m;
                 }
 
-                let silBtn = (userRole === "admin" || isToday) ? `<button onclick="iptal('${d.id}')" style="background:var(--red); color:#fff; position:absolute; right:10px; top:10px; border:none; padding:4px 8px; border-radius:4px; font-size:9px;">SİL</button>` : "";
+                let silBtn = (userRole === "admin" || isToday) ? `<button onclick="iptal('${d.id}')" style="background:var(--red); color:#fff; position:absolute; right:10px; top:10px; border:none; padding:4px 8px; border-radius:4px; font-size:8px;">SİL</button>` : "";
                 
                 let satir = `<div class="islem-item">
                     ${silBtn}
                     <div><b>${m}₺</b> - ${d.not}<br><small style="color:#555">${d.tip} | ${d.ekleyen}</small></div>
-                    ${isBorc ? `<div style="display:flex; gap:10px; margin-top:10px;">
-                        <button onclick="ode('${d.id}',${m},'${d.not}','Nakit')" class="action-btn" style="background:var(--n-green); color:#000; flex:1;">NAKİT ÖDE</button>
-                        <button onclick="ode('${d.id}',${m},'${d.not}','Kart')" class="action-btn" style="background:var(--n-blue); color:#000; flex:1;">KART ÖDE</button>
+                    ${isBorc ? `<div style="display:flex; gap:5px; margin-top:5px;">
+                        <button onclick="ode('${d.id}',${m},'${d.not}','Nakit')" class="action-btn" style="background:var(--n-green); color:#000; flex:1;">NAKİT</button>
+                        <button onclick="ode('${d.id}',${m},'${d.not}','Kart')" class="action-btn" style="background:var(--n-blue); color:#000; flex:1;">KART</button>
                     </div>` : ""}
                 </div>`;
 
@@ -157,9 +181,9 @@
                 else if(isToday) { if(d.tip === "Gider") gLog += satir; else log += satir; }
             });
             document.getElementById('vT').innerText = kasa + "₺";
-            document.getElementById('islem-log').innerHTML = log || "<center style='padding:20px; color:#333'>İşlem yok.</center>";
-            document.getElementById('gider-log').innerHTML = gLog || "<center style='padding:20px; color:#333'>Gider yok.</center>";
-            document.getElementById('borc-log').innerHTML = bLog || "<center style='padding:20px; color:#333'>Açık borç yok.</center>";
+            document.getElementById('islem-log').innerHTML = log || "<center style='padding:10px; color:#333; font-size:12px;'>Kayıt yok.</center>";
+            document.getElementById('gider-log').innerHTML = gLog || "<center style='padding:10px; color:#333; font-size:12px;'>Gider yok.</center>";
+            document.getElementById('borc-log').innerHTML = bLog || "<center style='padding:10px; color:#333; font-size:12px;'>Borç yok.</center>";
         });
         unsubs.push(u1);
     }
@@ -169,8 +193,7 @@
         await db.collection("islemler").add({
             miktar: m, tip: seciliTip, sube: document.getElementById('i-sube').value,
             not: document.getElementById('i-not').value || seciliTip,
-            tarih: firebase.firestore.FieldValue.serverTimestamp(),
-            durum: "aktif", arsiv: false, ekleyen: currentUserName
+            tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false, ekleyen: currentUserName
         });
         document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
     }
@@ -180,12 +203,11 @@
         await db.collection("islemler").doc(id).update({durum:"iptal", arsiv: true});
         await db.collection("islemler").add({
             miktar: m, tip: tip, sube: document.getElementById('i-sube').value,
-            not: "[BORÇ KAPANDI] " + n, tarih: firebase.firestore.FieldValue.serverTimestamp(),
-            durum: "aktif", arsiv: false, ekleyen: currentUserName
+            not: "[BORÇ] " + n, tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false, ekleyen: currentUserName
         });
     }
 
-    function iptal(id) { if(confirm("Siliyorum?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    function iptal(id) { if(confirm("Silinsin mi?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
     function sec(btn, val) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=val; }
     window.onload = () => { if(localStorage.getItem('c_u')) { document.getElementById('k').value=localStorage.getItem('c_u'); document.getElementById('s').value=localStorage.getItem('c_p'); giris(); } };
 </script>
