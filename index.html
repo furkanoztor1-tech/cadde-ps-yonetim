@@ -3,207 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | MANAGEMENT SYSTEM PRO</title>
+    <title>CADDE PS PRO | MANAGEMENT</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap');
         
         :root {
-            --n-blue: #00d2ff;
-            --n-green: #39ff14;
-            --n-red: #ff3131;
-            --bg-deep: #050505;
-            --panel-bg: #0f0f12;
-            --border: #1f1f23;
+            --neon-green: #39ff14;
+            --neon-blue: #00d2ff;
+            --dark-core: #080808;
+            --panel-bg: #121214;
+            --border-color: #222;
         }
 
-        body, html { margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; background: var(--bg-deep); color: #e0e0e0; height: 100vh; overflow: hidden; }
-        
-        /* PROFESYONEL ÜST NAVİGASYON */
-        .top-nav {
+        body, html { 
+            margin: 0; padding: 0; 
+            font-family: 'Rajdhani', sans-serif; 
+            background: var(--dark-core); 
+            color: #eee; 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex;
+        }
+
+        /* YAN PANEL (PROFESYONEL NAVİGASYON) */
+        .sidebar {
+            width: 70px;
             background: #000;
-            height: 50px;
+            border-right: 1px solid var(--border-color);
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 15px;
-            border-bottom: 2px solid var(--border);
-            position: relative;
-            z-index: 100;
+            padding-top: 20px;
+            transition: width 0.3s;
+            z-index: 1000;
         }
-        .brand { font-family: 'Orbitron'; font-weight: 700; color: var(--n-green); font-size: 14px; letter-spacing: 1px; }
-        .nav-links { display: flex; gap: 20px; }
-        .nav-link { font-family: 'Orbitron'; font-size: 10px; color: #666; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        .nav-link.active { color: var(--n-blue); text-shadow: 0 0 10px rgba(0,210,255,0.5); }
-        .nav-link:hover { color: #fff; }
+        .sidebar:hover { width: 160px; }
+        
+        .nav-item {
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            cursor: pointer;
+            color: #444;
+            transition: 0.2s;
+            font-family: 'Orbitron';
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .nav-item i { display: block; font-size: 20px; margin-bottom: 5px; }
+        .nav-item.active { color: var(--neon-blue); border-right: 3px solid var(--neon-blue); background: rgba(0,210,255,0.05); }
+        .nav-item:hover { color: #fff; }
 
-        .main-container { display: flex; flex-direction: column; height: calc(100vh - 50px); padding: 8px; box-sizing: border-box; }
+        /* ANA İÇERİK ALANI */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        /* KASA ÖZETİ - COMPACT */
-        .kasa-summary {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
+        /* ÜST KASA BİLGİSİ */
+        .top-bar {
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            background: #000;
+            border-bottom: 1px solid var(--border-color);
         }
-        .kasa-val { font-family: 'Orbitron'; font-size: 24px; color: var(--n-green); }
+        .kasa-box { text-align: right; }
+        .kasa-label { font-family: 'Orbitron'; font-size: 9px; color: #555; }
+        .kasa-val { font-family: 'Orbitron'; font-size: 26px; color: var(--neon-green); text-shadow: 0 0 10px rgba(57,255,20,0.3); }
 
-        /* INPUT AREA - PROFESYONEL FORM */
-        .action-card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
+        .scroll-area { flex-grow: 1; padding: 15px; overflow-y: auto; }
+
+        /* FORM TASARIMI */
+        .pro-card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
         select, input {
             width: 100%;
             background: #000;
-            border: 1px solid #222;
+            border: 1px solid #333;
             color: #fff;
-            padding: 10px;
-            margin-bottom: 6px;
-            border-radius: 6px;
-            font-family: 'Rajdhani';
-            font-size: 14px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 15px;
             outline: none;
         }
-        .type-selector { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 8px; }
-        .type-btn {
-            background: #000;
-            border: 1px solid #222;
-            color: #555;
-            padding: 8px 0;
-            text-align: center;
-            font-size: 9px;
-            font-family: 'Orbitron';
-            border-radius: 4px;
-            cursor: pointer;
+        .btn-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px; }
+        .btn-opt {
+            background: #000; border: 1px solid #333; color: #666;
+            padding: 12px 0; border-radius: 6px; font-family: 'Orbitron'; font-size: 9px; cursor: pointer;
         }
-        .type-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,210,255,0.05); }
+        .btn-opt.active { border-color: var(--neon-blue); color: var(--neon-blue); }
         
-        .submit-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--n-green);
-            color: #000;
-            font-family: 'Orbitron';
-            font-weight: 700;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(57, 255, 20, 0.2);
+        .save-btn {
+            width: 100%; padding: 15px; background: var(--neon-green); color: #000;
+            font-family: 'Orbitron'; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;
         }
 
-        /* DATA WINDOWS */
-        .grid-layout { flex-grow: 1; display: grid; grid-template-rows: 1.2fr 1fr 1fr; gap: 8px; overflow: hidden; }
-        .window { background: #080808; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
-        .w-head { background: #151518; padding: 6px 12px; border-bottom: 1px solid #1a1a1a; display: flex; justify-content: space-between; align-items: center; }
-        .w-title { font-family: 'Orbitron'; font-size: 9px; color: var(--n-blue); letter-spacing: 1px; }
-        .w-body { flex-grow: 1; overflow-y: auto; }
+        /* LİSTE GÖRÜNÜMÜ */
+        .window-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .window { background: #0a0a0a; border: 1px solid var(--border-color); border-radius: 12px; min-height: 250px; display: flex; flex-direction: column; }
+        .w-title { padding: 10px 15px; background: #111; border-bottom: 1px solid #222; color: var(--neon-blue); font-family: 'Orbitron'; font-size: 10px; border-radius: 12px 12px 0 0; }
+        .w-list { flex-grow: 1; padding: 10px; overflow-y: auto; }
+        
+        .list-item { 
+            padding: 12px; border-bottom: 1px solid #1a1a1a; 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .item-val { font-family: 'Orbitron'; font-size: 16px; color: #fff; }
+        .item-not { color: #888; font-size: 14px; margin-left: 10px; }
 
-        /* LIST ITEMS */
-        .list-item { padding: 10px 12px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; align-items: center; }
-        .l-amt { font-family: 'Orbitron'; font-size: 15px; color: #fff; }
-        .l-not { color: #888; font-size: 13px; margin-left: 5px; }
-        .l-meta { display: block; font-size: 10px; color: #333; margin-top: 2px; }
-
-        .btn-pay { background: var(--n-green); color: #000; border: none; padding: 4px 10px; border-radius: 4px; font-family: 'Orbitron'; font-size: 9px; font-weight: 700; }
-
-        /* MANAGER DRAWER */
-        .z-btn { background: var(--n-red); color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-family: 'Orbitron'; font-size: 9px; font-weight: 700; cursor: pointer; }
+        .z-btn { background: #500; color: #fff; border: 1px solid #800; padding: 8px 15px; border-radius: 6px; font-family: 'Orbitron'; font-size: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <nav class="top-nav">
-        <div class="brand">CADDE PS <span style="color:#555; font-size:10px;">v4.0</span></div>
-        <div class="nav-links">
-            <div class="nav-link active" onclick="show('home', this)">Dashboard</div>
-            <div class="nav-link" onclick="show('arsiv', this)">Arşiv</div>
-            <div class="nav-link" onclick="muhasebeDetay()">Muhasebe</div>
-        </div>
-        <button class="z-btn" onclick="gunuKapat()">GÜNÜ KAPAT</button>
+    <nav class="sidebar">
+        <div class="nav-item active" onclick="tab('main')">PANEL</div>
+        <div class="nav-item" onclick="tab('arsiv')">ARŞİV</div>
+        <div class="nav-item" onclick="muhasebe()">RAPOR</div>
     </nav>
 
-    <div class="main-container">
-        
-        <div id="home-sec">
-            <div class="kasa-summary">
-                <span style="font-family:'Orbitron'; font-size:10px; color:#555;">GÜNCEL ŞUBE BAKİYESİ</span>
+    <div class="main-content">
+        <header class="top-bar">
+            <div class="brand" style="font-family:'Orbitron'; font-weight:700; color:#fff">CADDE PS <span style="color:var(--neon-blue)">v5.0</span></div>
+            <div class="kasa-box">
+                <div class="kasa-label">NET KASA STATUS</div>
                 <div class="kasa-val" id="vT">0₺</div>
             </div>
+            <button class="z-btn" onclick="gunuKapat()">GÜNÜ KAPAT</button>
+        </header>
 
-            <div class="action-card">
-                <select id="i-sube" onchange="verileriGetir()">
-                    <option value="CADDEPS 1">ŞUBE 1 (CADDE)</option>
-                    <option value="CADDEPS 2">ŞUBE 2 (CADDE)</option>
-                </select>
-                <div class="type-selector">
-                    <div class="type-btn active" onclick="setT('Nakit', this)">NAKİT</div>
-                    <div class="type-btn" onclick="setT('Kart', this)">KART</div>
-                    <div class="type-btn" onclick="setT('Havale', this)">HAVALE</div>
-                    <div class="type-btn" onclick="setT('Gider', this)">GİDER</div>
-                    <div class="type-btn" onclick="setT('Borç', this)">BORÇ</div>
+        <div class="scroll-area">
+            <div id="main-view">
+                <div class="pro-card">
+                    <select id="i-sube" onchange="verileriGetir()">
+                        <option value="CADDEPS 1">ŞUBE 1 (CADDE)</option>
+                        <option value="CADDEPS 2">ŞUBE 2 (CADDE)</option>
+                    </select>
+                    <div class="btn-group">
+                        <div class="btn-opt active" onclick="setTip('Nakit', this)">NAKİT</div>
+                        <div class="btn-opt" onclick="setTip('Kart', this)">KART</div>
+                        <div class="btn-opt" onclick="setTip('Havale', this)">HAVALE</div>
+                        <div class="btn-opt" onclick="setTip('Gider', this)">GİDER</div>
+                        <div class="btn-opt" onclick="setTip('Borç', this)">BORÇ</div>
+                    </div>
+                    <input type="number" id="i-miktar" placeholder="Tutar ₺" inputmode="decimal">
+                    <input type="text" id="i-not" placeholder="Açıklama / Müşteri...">
+                    <button class="save-btn" onclick="kaydet()">VERİYİ SİSTEME İŞLE</button>
                 </div>
-                <input type="number" id="i-miktar" placeholder="Tutar ₺" inputmode="decimal">
-                <input type="text" id="i-not" placeholder="İşlem Açıklaması...">
-                <button class="submit-btn" onclick="kaydet()">SİSTEME İŞLE</button>
+
+                <div class="window-grid">
+                    <div class="window"><div class="w-title">GÜNLÜK İŞLEMLER</div><div class="w-list" id="log-islem"></div></div>
+                    <div class="window"><div class="w-title">AÇIK BORÇLAR</div><div class="w-list" id="log-borc"></div></div>
+                </div>
             </div>
 
-            <div class="grid-layout">
-                <div class="window"><div class="w-head"><span class="w-title">AÇIK BORÇ TAKİBİ</span></div><div class="w-body" id="log-borc"></div></div>
-                <div class="window"><div class="w-head"><span class="w-title">GÜNLÜK GELİR AKIŞI</span></div><div class="w-body" id="log-islem"></div></div>
-                <div class="window"><div class="w-head"><span class="w-title">GİDERLER</span></div><div class="w-body" id="log-gider"></div></div>
+            <div id="arsiv-view" style="display:none;">
+                <div class="window" style="min-height:500px;"><div class="w-title">GEÇMİŞ ARŞİV</div><div class="w-list" id="log-arsiv"></div></div>
             </div>
         </div>
-
-        <div id="arsiv-sec" style="display:none; height:100%;">
-            <div class="window" style="height:100%;"><div class="w-head"><span class="w-title">GEÇMİŞ Z RAPORLARI VE ARŞİV</span></div><div class="w-body" id="log-arsiv"></div></div>
-        </div>
-
     </div>
 
 <script>
+    // Konfigürasyon ve Firebase Başlatma
     const config = { apiKey: "AIzaSyA1Yr6u_z0eQV5a_8_5wRSvLrqcV6vUmI8", authDomain: "cadde-yonetim.firebaseapp.com", projectId: "cadde-yonetim", storageBucket: "cadde-yonetim.firebasestorage.app", messagingSenderId: "578914689738", appId: "1:578914689738:web:70c71a96e0eea69b0bca33" };
     firebase.initializeApp(config);
     const db = firebase.firestore();
 
-    let currentTip = "Nakit", unsubs = [];
+    let tip = "Nakit", unsubs = [];
 
     function verileriGetir() {
         const sName = document.getElementById('i-sube').value;
         unsubs.forEach(u => u());
         const u1 = db.collection("islemler").where("sube", "==", sName).onSnapshot(snap => {
-            let kasa = 0, hL="", gL="", bL="", aL="";
+            let kasa = 0, hL="", bL="", aL="";
             const docs = [];
             snap.forEach(d => docs.push({id: d.id, ...d.data()}));
             docs.sort((a,b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0));
 
             docs.forEach(d => {
                 const m = Number(d.miktar) || 0;
-                let ui = `<div class="list-item"><div><span class="l-amt">${m}₺</span><span class="l-not">${d.not}</span><span class="l-meta">${d.tip} | ${d.ekleyen || ''}</span></div>`;
+                let ui = `<div class="list-item"><div><span class="item-val">${m}₺</span><span class="item-not">${d.not}</span></div></div>`;
                 
                 if(d.arsiv === true) {
                     if(d.tip === "DEVİR") kasa += m;
-                    aL += ui + `</div>`;
+                    aL += ui;
                 } else if(d.durum === "aktif") {
-                    if(d.tip === "Borç") bL += ui + `<button onclick="ode('${d.id}',${m},'${d.not}')" class="btn-pay">TAHSİL ET</button></div>`;
+                    if(d.tip === "Borç") bL += ui;
                     else {
-                        if(d.tip === "Gider") { kasa -= m; gL += ui + `</div>`; }
-                        else { kasa += m; hL += ui + `</div>`; }
+                        if(d.tip === "Gider") kasa -= m; else kasa += m;
+                        hL += ui;
                     }
                 }
             });
             document.getElementById('vT').innerText = kasa + "₺";
             document.getElementById('log-islem').innerHTML = hL;
-            document.getElementById('log-gider').innerHTML = gL;
             document.getElementById('log-borc').innerHTML = bL;
             document.getElementById('log-arsiv').innerHTML = aL;
         });
@@ -213,7 +208,7 @@
     async function gunuKapat() {
         const s = document.getElementById('i-sube').value;
         const k = parseInt(document.getElementById('vT').innerText);
-        if(!confirm(`${s} Z RAPORU ALINSIN MI?\nKasa: ${k}₺ yarına devredilecek.`)) return;
+        if(!confirm(`Z RAPORU: ${k}₺ devredilsin mi?`)) return;
 
         const snap = await db.collection("islemler").where("sube","==",s).where("arsiv","==",false).get();
         const batch = db.batch();
@@ -221,39 +216,29 @@
         const devirRef = db.collection("islemler").doc();
         batch.set(devirRef, { miktar: k, tip: "DEVİR", sube: s, not: "Dünden Devreden", tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false });
         await batch.commit();
-        alert("Z Raporu Kaydedildi.");
+        alert("GÜN KAPATILDI.");
     }
 
-    function show(v, el) {
-        document.getElementById('home-sec').style.display = v === 'home' ? 'block' : 'none';
-        document.getElementById('arsiv-sec').style.display = v === 'arsiv' ? 'block' : 'none';
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        el.classList.add('active');
+    function tab(v) {
+        document.getElementById('main-view').style.display = v === 'main' ? 'block' : 'none';
+        document.getElementById('arsiv-view').style.display = v === 'arsiv' ? 'block' : 'none';
     }
 
-    function setT(v, el) {
-        currentTip = v;
-        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    function setTip(v, el) {
+        tip = v;
+        document.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
     }
 
     async function kaydet() {
         const m = Number(document.getElementById('i-miktar').value); if(!m) return;
         await db.collection("islemler").add({
-            miktar: m, tip: currentTip, sube: document.getElementById('i-sube').value,
-            not: document.getElementById('i-not').value || currentTip,
+            miktar: m, tip: tip, sube: document.getElementById('i-sube').value,
+            not: document.getElementById('i-not').value || tip,
             tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false
         });
         document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
     }
-
-    async function ode(id, m, n) {
-        if(!confirm("Borç tahsil edildi mi?")) return;
-        await db.collection("islemler").doc(id).update({durum:"kapali", arsiv: true});
-        await db.collection("islemler").add({ miktar: m, tip: "Nakit", sube: document.getElementById('i-sube').value, not: "[BORÇ TAHSİLAT] " + n, tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false });
-    }
-
-    function muhasebeDetay() { alert(`NET KASA ANALİZİ\n------------------\nŞube: ${document.getElementById('i-sube').value}\nKasa: ${document.getElementById('vT').innerText}`); }
 
     window.onload = verileriGetir;
 </script>
