@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v31.0 FIX</title>
+    <title>CADDE PS | v33.0 STABIL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -21,9 +21,9 @@
         .action-btn { width: 100%; padding: 15px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-family: 'Orbitron'; font-size: 13px; margin-bottom: 8px; }
         .gizli { display: none !important; }
         .islem-satir { padding: 12px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; align-items: center; }
-        .borc-kart { padding: 12px; background: #0d0d0d; border-left: 4px solid var(--red); margin-bottom: 10px; }
+        .borc-kart { padding: 12px; background: #0d0d0d; border-left: 4px solid var(--red); margin-bottom: 10px; border-radius: 4px; }
         .odeme-secenek { display: flex; gap: 5px; margin-top: 10px; }
-        .odeme-secenek button { flex: 1; padding: 8px; font-size: 10px; cursor: pointer; border: none; border-radius: 3px; font-family: 'Orbitron'; }
+        .odeme-secenek button { flex: 1; padding: 10px; font-size: 11px; cursor: pointer; border: none; border-radius: 3px; font-family: 'Orbitron'; font-weight: bold; }
         @media (max-width: 1024px) { .main-grid { display: flex; flex-direction: column; } }
     </style>
 </head>
@@ -53,14 +53,14 @@
                 <option value="CADDEPS 2">CADDEPS 2</option>
             </select>
             <div class="type-grid">
-                <button class="t-btn active" id="btn-nakit" data-val="Nakit" onclick="sec(this)">NAKİT</button>
+                <button class="t-btn active" data-val="Nakit" onclick="sec(this)">NAKİT</button>
                 <button class="t-btn" data-val="Kart" onclick="sec(this)">KART</button>
                 <button class="t-btn" data-val="Borç" onclick="sec(this)">BORÇ</button>
                 <button class="t-btn" data-val="Gider" onclick="sec(this)">GİDER</button>
                 <button class="t-btn" data-val="Havale" onclick="sec(this)">HAVALE</button>
             </div>
             <input type="number" id="i-miktar" placeholder="Tutar ₺" inputmode="numeric">
-            <input type="text" id="i-not" placeholder="Açıklama (Opsiyonel)">
+            <input type="text" id="i-not" placeholder="Açıklama (İsim vb.)">
             <button id="kaydet-butonu" onclick="kaydet()" class="action-btn" style="background:var(--n-green); color:#000; height:60px;">KAYDET / EKLE</button>
             
             <div id="admin-panel" class="gizli">
@@ -68,7 +68,7 @@
             </div>
 
             <div class="glass" style="border: 1px solid var(--gold); margin-top:10px;">
-                <p style="color:var(--gold); font-size:11px; margin:0; font-family:'Orbitron';">VARDİYA ÖZETİNİZ</p>
+                <p style="color:var(--gold); font-size:11px; margin:0; font-family:'Orbitron';">SİZİN VARDİYANIZ</p>
                 <div id="v-nakit" style="font-size:16px; margin-top:5px;">Nakit: 0₺</div>
                 <div id="v-kart" style="font-size:16px;">Kart: 0₺</div>
                 <button onclick="vardiyaBitir()" class="action-btn" style="background:var(--gold); color:#000; margin-top:10px; height:50px;">VARDİYA TESLİM ET</button>
@@ -77,7 +77,7 @@
 
         <div class="glass">
             <div id="kasa-izleme-alani" class="gizli" style="text-align:center; padding:15px; border:2px solid var(--n-green); border-radius:8px; margin-bottom:10px;">
-                <div id="kasa-detay" style="font-size:12px; color:#888;">--</div>
+                <div id="kasa-detay" style="font-size:12px; color:#888;">N: 0 | K: 0</div>
                 <div id="vT" style="font-size:32px; font-family:'Orbitron'; color:var(--n-green);">0₺</div>
             </div>
             <h4 id="liste-baslik" style="margin:5px 0; color:var(--n-blue); font-size:11px;">GÜNCEL HAREKETLER</h4>
@@ -91,16 +91,15 @@
     </div>
 </div>
 
-<!-- Arşiv Modalı Aynı Kaldı -->
 <div id="arsiv-modal" class="gizli" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:2000; padding:20px; box-sizing:border-box;">
     <div style="max-width:900px; margin:auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--gold); padding-bottom:10px;">
-            <h2 style="color:var(--gold); font-family:'Orbitron';">ARŞİV</h2>
+            <h2 style="color:var(--gold); font-family:'Orbitron';">MUHASEBE ARŞİVİ</h2>
             <button onclick="modalKapat('arsiv-modal')" style="background:var(--red); border:none; color:#fff; padding:10px 20px;">KAPAT</button>
         </div>
         <div style="margin:20px 0; display:grid; grid-template-columns: 1fr 1fr auto; gap:10px;">
             <input type="date" id="arsiv-tarih">
-            <select id="arsiv-p-filtre"><option value="hepsi">Tüm Personel</option></select>
+            <select id="arsiv-p-filtre"><option value="hepsi">Tüm Personeller</option></select>
             <button onclick="arsivGetir()" class="action-btn" style="background:var(--gold); color:#000; width:120px; margin:0;">SORGULA</button>
         </div>
         <div id="arsiv-sonuc" class="log-box" style="height:60vh;"></div>
@@ -166,10 +165,15 @@
         unsubs.forEach(u => u()); unsubs = [];
         let gunBas = new Date(); gunBas.setHours(0,0,0,0);
 
-        const u1 = db.collection("islemler").where("sube","==",sube).where("tarih",">=",gunBas).orderBy("tarih","desc").onSnapshot(snap => {
+        const u1 = db.collection("islemler").where("sube","==",sube).where("tarih",">=",gunBas).onSnapshot(snap => {
             let gN=0, gK=0, log="", vN=0, vK=0;
-            snap.forEach(doc => {
-                const d = doc.data(); const dE = (d.ekleyen || "").toLowerCase();
+            // Manuel sıralama yapıyoruz (orderBy hatasını önlemek için)
+            let docs = [];
+            snap.forEach(d => docs.push({id: d.id, ...d.data()}));
+            docs.sort((a,b) => b.tarih - a.tarih);
+
+            docs.forEach(d => {
+                const dE = (d.ekleyen || "").toLowerCase();
                 if(d.durum === "aktif") {
                     if(d.tip === "Nakit") gN += d.miktar;
                     if(d.tip === "Kart") gK += d.miktar;
@@ -182,16 +186,16 @@
                 }
                 if(userRole === "admin" || (dE === currentUserName && d.v_durum !== "teslim")) {
                     log += `<div class="islem-satir">
-                        <span><b>${d.miktar}₺</b> - ${d.not || d.tip} <small style="color:#555">(${dE.toUpperCase()})</small></span>
-                        ${userRole === "admin" ? `<button class="sil-btn" onclick="tSil('${doc.id}')" style="background:red; color:white; border:none; padding:5px; font-size:9px;">SİL</button>` : ''}
+                        <span><b>${d.miktar}₺</b> - ${d.not || d.tip} <small>(${dE.toUpperCase()})</small></span>
+                        ${userRole === "admin" ? `<button onclick="tSil('${d.id}')" style="background:red; color:white; border:none; padding:5px; border-radius:3px;">SİL</button>` : ''}
                     </div>`;
                 }
             });
             if(userRole === "admin") {
-                document.getElementById('kasa-detay').innerText = `N: ${gN}₺ | K: ${gK}₺`;
+                document.getElementById('kasa-detay').innerText = `Nakit: ${gN}₺ | Kart: ${gK}₺`;
                 document.getElementById('vT').innerText = (gN + gK + 200) + "₺";
             }
-            document.getElementById('islem-log').innerHTML = log || "Kayıt yok.";
+            document.getElementById('islem-log').innerHTML = log || "İşlem yok.";
             pNakit = vN; pKart = vK;
             document.getElementById('v-nakit').innerText = `Nakit: ${vN}₺`;
             document.getElementById('v-kart').innerText = `Kart: ${vK}₺`;
@@ -202,10 +206,10 @@
             snap.forEach(doc => {
                 const d = doc.data();
                 bLog += `<div class="borc-kart">
-                    <div style="font-size:14px;"><b>${d.miktar}₺</b> - ${d.not}</div>
+                    <div><b>${d.miktar}₺</b> - ${d.not}</div>
                     <div class="odeme-secenek">
-                        <button onclick="borcOde('${doc.id}',${d.miktar},'${d.not}','Nakit')" style="background:var(--n-green); color:#000;">NAKİT ÖDE</button>
-                        <button onclick="borcOde('${doc.id}',${d.miktar},'${d.not}','Kart')" style="background:var(--n-blue); color:#000;">KART ÖDE</button>
+                        <button onclick="borcOde('${doc.id}',${d.miktar},'${d.not}','Nakit')" style="background:var(--n-green); color:#000;">NAKİT</button>
+                        <button onclick="borcOde('${doc.id}',${d.miktar},'${d.not}','Kart')" style="background:var(--n-blue); color:#000;">KART</button>
                     </div>
                 </div>`;
             });
@@ -216,51 +220,42 @@
 
     async function kaydet() {
         const m = Number(document.getElementById('i-miktar').value);
-        if(!m || m <= 0) { alert("Lütfen tutar girin!"); return; }
-        
+        if(!m || m <= 0) return alert("Tutar gir!");
         const btn = document.getElementById('kaydet-butonu');
-        btn.disabled = true; btn.innerText = "KAYDEDİLİYOR...";
-
+        btn.disabled = true;
         try {
             await db.collection("islemler").add({
-                miktar: m,
-                tip: seciliTip,
-                sube: document.getElementById('i-sube').value,
-                not: document.getElementById('i-not').value,
-                tarih: new Date(),
-                durum: "aktif",
-                v_durum: "acik",
-                ekleyen: currentUserName
+                miktar: m, tip: seciliTip, sube: document.getElementById('i-sube').value,
+                not: document.getElementById('i-not').value, tarih: new Date(),
+                durum: "aktif", v_durum: "acik", ekleyen: currentUserName
             });
             document.getElementById('i-miktar').value = "";
             document.getElementById('i-not').value = "";
-        } catch (e) { alert("Hata oluştu!"); }
-        
-        btn.disabled = false; btn.innerText = "KAYDET / EKLE";
+        } catch (e) { alert("Hata!"); }
+        btn.disabled = false;
     }
 
     async function borcOde(id, m, n, tip) {
-        if(!confirm(tip + " olarak tahsil edilsin mi?")) return;
-        const sube = document.getElementById('i-sube').value;
+        if(!confirm(tip + " ödeme?")) return;
         await db.collection("islemler").doc(id).update({durum:"odendi"});
         await db.collection("islemler").add({
-            miktar:m, tip:tip, sube:sube, not:"[BORÇ ÖDEME] "+n, 
-            tarih:new Date(), durum:"aktif", v_durum:"acik", ekleyen:currentUserName
+            miktar: m, tip: tip, sube: document.getElementById('i-sube').value,
+            not: "[BORÇ ÖDEME] " + n, tarih: new Date(), durum: "aktif", v_durum: "acik", ekleyen: currentUserName
         });
     }
 
     async function vardiyaBitir() {
-        if(!confirm("Vardiyanızı teslim edip WP raporu gönderilsin mi?")) return;
+        if(!confirm("Vardiya teslim edilsin mi?")) return;
         const sube = document.getElementById('i-sube').value;
         const snap = await db.collection("islemler").where("sube","==",sube).where("ekleyen","==",currentUserName).where("v_durum","==","acik").get();
-        if(snap.empty) { alert("İşlem yok."); return; }
+        if(snap.empty) return alert("İşlem yok!");
         let batch = db.batch(); let rapor = "";
         snap.forEach(doc => { 
             batch.update(doc.ref, { v_durum: "teslim" });
             const d = doc.data(); if(d.durum==="aktif") rapor += `${d.miktar}₺ - ${d.not || d.tip}\n`;
         });
         await batch.commit();
-        const wp = `📊 *VARDİYA RAPORU*\n👤 ${currentUserName.toUpperCase()}\n🏪 ${sube}\n💰 Nakit: ${pNakit}₺\n💳 Kart: ${pKart}₺\n----------\n${rapor}`;
+        const wp = `📊 *RAPOR*\n👤 ${currentUserName.toUpperCase()}\n💰 Nakit: ${pNakit}₺\n💳 Kart: ${pKart}₺\n---\n${rapor}`;
         window.open(`https://api.whatsapp.com/send?phone=905393774554&text=${encodeURIComponent(wp)}`, '_blank');
         cikisYap();
     }
@@ -271,28 +266,29 @@
         seciliTip = btn.getAttribute('data-val');
     }
 
-    async function arsivGetir() {
-        const tarihStr = document.getElementById('arsiv-tarih').value;
-        const pFiltre = document.getElementById('arsiv-p-filtre').value;
-        if(!tarihStr) return alert("Tarih seçin!");
-        let bas = new Date(tarihStr); bas.setHours(0,0,0,0);
-        let bit = new Date(tarihStr); bit.setHours(23,59,59,999);
-        const snap = await db.collection("islemler").where("sube","==",document.getElementById('i-sube').value).where("tarih",">=",bas).where("tarih","<=",bit).get();
-        let h = "", n=0, k=0;
-        snap.forEach(doc => {
-            const d = doc.data(); const ekleyen = (d.ekleyen || "").toLowerCase();
-            if(pFiltre === "hepsi" || ekleyen === pFiltre) {
-                if(d.durum === "aktif") { if(d.tip==="Nakit") n+=d.miktar; if(d.tip==="Kart") k+=d.miktar; if(d.tip==="Gider") n-=d.miktar; }
-                h += `<div class="islem-satir"><span><b>${d.miktar}₺</b> - ${d.not || d.tip} (${ekleyen.toUpperCase()})</span><button onclick="tSil('${doc.id}',true)" style="background:red; border:none; color:white;">SİL</button></div>`;
-            }
-        });
-        document.getElementById('arsiv-sonuc').innerHTML = `<div style="padding:10px; border:1px solid var(--gold);">Toplam Nakit: ${n}₺ | Kart: ${k}₺</div>` + h;
-    }
-
-    async function tSil(id, arsivden = false) { if(confirm("Silinsin mi?")) { await db.collection("islemler").doc(id).delete(); if(arsivden) arsivGetir(); } }
+    async function tSil(id) { if(confirm("Sil?")) await db.collection("islemler").doc(id).delete(); }
     function cikisYap() { localStorage.removeItem('cadde_session_v2'); location.reload(); }
     function arsivAc() { document.getElementById('arsiv-modal').classList.remove('gizli'); }
     function modalKapat(id) { document.getElementById(id).classList.add('gizli'); }
+
+    async function arsivGetir() {
+        const t = document.getElementById('arsiv-tarih').value;
+        const f = document.getElementById('arsiv-p-filtre').value;
+        if(!t) return alert("Tarih seç!");
+        let b = new Date(t); b.setHours(0,0,0,0);
+        let s = new Date(t); s.setHours(23,59,59,999);
+        const snap = await db.collection("islemler").where("sube","==",document.getElementById('i-sube').value).where("tarih",">=",b).where("tarih","<=",s).get();
+        let html = "", topN = 0, topK = 0;
+        snap.forEach(doc => {
+            const d = doc.data(); const ek = (d.ekleyen || "").toLowerCase();
+            if(f === "hepsi" || ek === f) {
+                if(d.durum === "aktif") { if(d.tip==="Nakit") topN+=d.miktar; if(d.tip==="Kart") topK+=d.miktar; if(d.tip==="Gider") topN-=d.miktar; }
+                html += `<div class="islem-satir"><span><b>${d.miktar}₺</b> - ${d.not || d.tip} (${ek.toUpperCase()})</span><button onclick="tSil('${doc.id}')" style="background:red; color:white; border:none; padding:5px;">SİL</button></div>`;
+            }
+        });
+        document.getElementById('arsiv-sonuc').innerHTML = `<div style="padding:10px; border:1px solid var(--gold); margin-bottom:10px;">Nakit: ${topN}₺ | Kart: ${topK}₺</div>` + html;
+    }
+
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}); }, 1000);
 </script>
 </body>
