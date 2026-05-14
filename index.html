@@ -3,240 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS PRO | MANAGEMENT</title>
+    <title>CADDE PS | MANAGEMENT</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap');
         
-        :root {
-            --neon-green: #39ff14;
-            --neon-blue: #00d2ff;
-            --dark-core: #080808;
-            --panel-bg: #121214;
-            --border-color: #222;
-        }
+        :root { --n-green: #39ff14; --n-blue: #00d2ff; --n-red: #ff3131; --bg: #080808; --panel: #111114; }
+        body, html { margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; background: var(--bg); color: #fff; height: 100vh; overflow: hidden; }
+        .wrapper { display: flex; flex-direction: column; height: 100vh; padding: 8px; box-sizing: border-box; }
 
-        body, html { 
-            margin: 0; padding: 0; 
-            font-family: 'Rajdhani', sans-serif; 
-            background: var(--dark-core); 
-            color: #eee; 
-            height: 100vh; 
-            overflow: hidden; 
-            display: flex;
-        }
+        /* KASA KARTI */
+        .kasa-card { border: 1.5px solid var(--n-green); border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 10px; background: #000; box-shadow: 0 0 15px rgba(57, 255, 20, 0.1); }
+        .kasa-label { font-family: 'Orbitron'; font-size: 10px; color: #555; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+        .kasa-val { font-family: 'Orbitron'; font-size: 28px; color: var(--n-green); text-shadow: 0 0 8px rgba(57,255,20,0.4); }
 
-        /* YAN PANEL (PROFESYONEL NAVİGASYON) */
-        .sidebar {
-            width: 70px;
-            background: #000;
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
-            transition: width 0.3s;
-            z-index: 1000;
-        }
-        .sidebar:hover { width: 160px; }
+        /* KONTROL PANELİ */
+        .control-panel { background: var(--panel); border: 1px solid #222; border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+        select, input { width: 100%; padding: 11px; margin-bottom: 6px; background: #000; border: 1.5px solid #222; color: #fff; border-radius: 8px; font-size: 15px; box-sizing: border-box; outline: none; }
         
-        .nav-item {
-            width: 100%;
-            padding: 20px 0;
-            text-align: center;
-            cursor: pointer;
-            color: #444;
-            transition: 0.2s;
-            font-family: 'Orbitron';
-            font-size: 10px;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-        .nav-item i { display: block; font-size: 20px; margin-bottom: 5px; }
-        .nav-item.active { color: var(--neon-blue); border-right: 3px solid var(--neon-blue); background: rgba(0,210,255,0.05); }
-        .nav-item:hover { color: #fff; }
-
-        /* ANA İÇERİK ALANI */
-        .main-content { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
-        /* ÜST KASA BİLGİSİ */
-        .top-bar {
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #000;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .kasa-box { text-align: right; }
-        .kasa-label { font-family: 'Orbitron'; font-size: 9px; color: #555; }
-        .kasa-val { font-family: 'Orbitron'; font-size: 26px; color: var(--neon-green); text-shadow: 0 0 10px rgba(57,255,20,0.3); }
-
-        .scroll-area { flex-grow: 1; padding: 15px; overflow-y: auto; }
-
-        /* FORM TASARIMI */
-        .pro-card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        select, input {
-            width: 100%;
-            background: #000;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            font-size: 15px;
-            outline: none;
-        }
-        .btn-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 15px; }
-        .btn-opt {
-            background: #000; border: 1px solid #333; color: #666;
-            padding: 12px 0; border-radius: 6px; font-family: 'Orbitron'; font-size: 9px; cursor: pointer;
-        }
-        .btn-opt.active { border-color: var(--neon-blue); color: var(--neon-blue); }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 8px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px; }
         
-        .save-btn {
-            width: 100%; padding: 15px; background: var(--neon-green); color: #000;
-            font-family: 'Orbitron'; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;
-        }
+        .btn-m { background: #000; border: 1.5px solid #222; color: #666; padding: 12px 0; border-radius: 6px; font-family: 'Orbitron'; font-size: 9px; cursor: pointer; text-align: center; font-weight: 700; transition: 0.2s; }
+        .btn-m.active { border-color: var(--n-blue); color: var(--n-blue); box-shadow: 0 0 10px rgba(0, 210, 255, 0.2); }
+        .btn-m.blue-mode { border-color: #333; color: #aaa; }
+        .btn-m.blue-mode.active { border-color: var(--n-blue); color: #fff; background: rgba(0, 210, 255, 0.1); }
+        .btn-m.red-mode { border-color: #200; color: #600; }
+        .btn-m.red-mode:active { background: var(--n-red); color: #000; border-color: var(--n-red); }
 
-        /* LİSTE GÖRÜNÜMÜ */
-        .window-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .window { background: #0a0a0a; border: 1px solid var(--border-color); border-radius: 12px; min-height: 250px; display: flex; flex-direction: column; }
-        .w-title { padding: 10px 15px; background: #111; border-bottom: 1px solid #222; color: var(--neon-blue); font-family: 'Orbitron'; font-size: 10px; border-radius: 12px 12px 0 0; }
-        .w-list { flex-grow: 1; padding: 10px; overflow-y: auto; }
-        
-        .list-item { 
-            padding: 12px; border-bottom: 1px solid #1a1a1a; 
-            display: flex; justify-content: space-between; align-items: center; 
-        }
-        .item-val { font-family: 'Orbitron'; font-size: 16px; color: #fff; }
-        .item-not { color: #888; font-size: 14px; margin-left: 10px; }
+        .save-btn { width: 100%; padding: 15px; background: var(--n-green); color: #000; font-family: 'Orbitron'; font-weight: 700; border: none; border-radius: 10px; font-size: 14px; cursor: pointer; box-shadow: 0 4px 20px rgba(57, 255, 20, 0.2); }
 
-        .z-btn { background: #500; color: #fff; border: 1px solid #800; padding: 8px 15px; border-radius: 6px; font-family: 'Orbitron'; font-size: 10px; cursor: pointer; }
+        /* LİSTE PENCERELERİ */
+        .content { flex-grow: 1; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+        .win { background: #0a0a0a; border: 1.2px solid #1a1a1a; border-radius: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .win-h { background: #151518; padding: 6px 12px; border-bottom: 1px solid #222; color: var(--n-blue); font-family: 'Orbitron'; font-size: 9px; }
+        .win-b { flex-grow: 1; overflow-y: auto; padding: 5px; }
+
+        .item { padding: 10px; border-bottom: 1px solid #121212; display: flex; justify-content: space-between; align-items: center; }
+        .i-val { font-family: 'Orbitron'; font-size: 16px; color: #fff; }
+        .i-not { color: #888; font-size: 14px; margin-left: 8px; }
     </style>
 </head>
 <body>
 
-    <nav class="sidebar">
-        <div class="nav-item active" onclick="tab('main')">PANEL</div>
-        <div class="nav-item" onclick="tab('arsiv')">ARŞİV</div>
-        <div class="nav-item" onclick="muhasebe()">RAPOR</div>
-    </nav>
-
-    <div class="main-content">
-        <header class="top-bar">
-            <div class="brand" style="font-family:'Orbitron'; font-weight:700; color:#fff">CADDE PS <span style="color:var(--neon-blue)">v5.0</span></div>
-            <div class="kasa-box">
-                <div class="kasa-label">NET KASA STATUS</div>
-                <div class="kasa-val" id="vT">0₺</div>
-            </div>
-            <button class="z-btn" onclick="gunuKapat()">GÜNÜ KAPAT</button>
-        </header>
-
-        <div class="scroll-area">
-            <div id="main-view">
-                <div class="pro-card">
-                    <select id="i-sube" onchange="verileriGetir()">
-                        <option value="CADDEPS 1">ŞUBE 1 (CADDE)</option>
-                        <option value="CADDEPS 2">ŞUBE 2 (CADDE)</option>
-                    </select>
-                    <div class="btn-group">
-                        <div class="btn-opt active" onclick="setTip('Nakit', this)">NAKİT</div>
-                        <div class="btn-opt" onclick="setTip('Kart', this)">KART</div>
-                        <div class="btn-opt" onclick="setTip('Havale', this)">HAVALE</div>
-                        <div class="btn-opt" onclick="setTip('Gider', this)">GİDER</div>
-                        <div class="btn-opt" onclick="setTip('Borç', this)">BORÇ</div>
-                    </div>
-                    <input type="number" id="i-miktar" placeholder="Tutar ₺" inputmode="decimal">
-                    <input type="text" id="i-not" placeholder="Açıklama / Müşteri...">
-                    <button class="save-btn" onclick="kaydet()">VERİYİ SİSTEME İŞLE</button>
-                </div>
-
-                <div class="window-grid">
-                    <div class="window"><div class="w-title">GÜNLÜK İŞLEMLER</div><div class="w-list" id="log-islem"></div></div>
-                    <div class="window"><div class="w-title">AÇIK BORÇLAR</div><div class="w-list" id="log-borc"></div></div>
-                </div>
-            </div>
-
-            <div id="arsiv-view" style="display:none;">
-                <div class="window" style="min-height:500px;"><div class="w-title">GEÇMİŞ ARŞİV</div><div class="w-list" id="log-arsiv"></div></div>
-            </div>
-        </div>
+<div class="wrapper">
+    <div class="kasa-card">
+        <span class="kasa-label">GÜNCEL NET KASA</span>
+        <div class="kasa-val" id="vT">0₺</div>
     </div>
 
+    <div class="control-panel">
+        <select id="i-sube" onchange="verileriGetir()">
+            <option value="CADDEPS 1">ŞUBE 1 (CADDE)</option>
+            <option value="CADDEPS 2">ŞUBE 2 (CADDE)</option>
+        </select>
+
+        <!-- İLK SIRA: İŞLEM TİPLERİ -->
+        <div class="grid-5">
+            <div class="btn-m active" id="t-nakit" onclick="setT('Nakit', this)">NAKİT</div>
+            <div class="btn-m" onclick="setT('Kart', this)">KART</div>
+            <div class="btn-m" onclick="setT('Havale', this)">HAVALE</div>
+            <div class="btn-m" onclick="setT('Gider', this)">GİDER</div>
+            <div class="btn-m" onclick="setT('Borç', this)">BORÇ</div>
+        </div>
+
+        <!-- İKİNCİ SIRA: YÖNETİM ARAÇLARI (TAM İSTEDİĞİN YERDE) -->
+        <div class="grid-3">
+            <div class="btn-m blue-mode active" id="v-pan" onclick="nav('pan')">PANEL</div>
+            <div class="btn-m blue-mode" id="v-ars" onclick="nav('ars')">ARŞİV</div>
+            <div class="btn-m red-mode" onclick="zRaporu()">GÜNÜ KAPAT</div>
+        </div>
+
+        <input type="number" id="i-miktar" placeholder="Tutar ₺" inputmode="decimal">
+        <input type="text" id="i-not" placeholder="Müşteri adı veya işlem detayı...">
+        <button class="save-btn" onclick="kaydet()">İŞLEMİ KAYDET</button>
+    </div>
+
+    <div class="content" id="view-panel">
+        <div class="win"><div class="win-h">AKTİF BORÇLAR</div><div class="win-b" id="log-borc"></div></div>
+        <div class="win"><div class="win-h">GÜNLÜK KASA İŞLEMLERİ</div><div class="win-b" id="log-islem"></div></div>
+        <div class="win"><div class="win-h">GİDERLER</div><div class="win-b" id="log-gider"></div></div>
+    </div>
+
+    <div class="content" id="view-arsiv" style="display:none;">
+        <div class="win"><div class="win-h">KAPALI GÜN ARŞİVİ</div><div class="win-b" id="log-arsiv"></div></div>
+    </div>
+</div>
+
 <script>
-    // Konfigürasyon ve Firebase Başlatma
     const config = { apiKey: "AIzaSyA1Yr6u_z0eQV5a_8_5wRSvLrqcV6vUmI8", authDomain: "cadde-yonetim.firebaseapp.com", projectId: "cadde-yonetim", storageBucket: "cadde-yonetim.firebasestorage.app", messagingSenderId: "578914689738", appId: "1:578914689738:web:70c71a96e0eea69b0bca33" };
     firebase.initializeApp(config);
     const db = firebase.firestore();
 
-    let tip = "Nakit", unsubs = [];
+    let curT = "Nakit", unsubs = [];
 
     function verileriGetir() {
-        const sName = document.getElementById('i-sube').value;
+        const s = document.getElementById('i-sube').value;
         unsubs.forEach(u => u());
-        const u1 = db.collection("islemler").where("sube", "==", sName).onSnapshot(snap => {
-            let kasa = 0, hL="", bL="", aL="";
+        const u1 = db.collection("islemler").where("sube", "==", s).onSnapshot(snap => {
+            let kasa = 0, iL="", gL="", bL="", aL="";
             const docs = [];
             snap.forEach(d => docs.push({id: d.id, ...d.data()}));
             docs.sort((a,b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0));
 
             docs.forEach(d => {
                 const m = Number(d.miktar) || 0;
-                let ui = `<div class="list-item"><div><span class="item-val">${m}₺</span><span class="item-not">${d.not}</span></div></div>`;
-                
-                if(d.arsiv === true) {
-                    if(d.tip === "DEVİR") kasa += m;
-                    aL += ui;
-                } else if(d.durum === "aktif") {
+                let ui = `<div class="item"><div><span class="i-val">${m}₺</span><span class="i-not">${d.not}</span></div></div>`;
+                if(d.arsiv === true) { if(d.tip === "DEVİR") kasa += m; aL += ui; }
+                else if(d.durum === "aktif") {
                     if(d.tip === "Borç") bL += ui;
-                    else {
-                        if(d.tip === "Gider") kasa -= m; else kasa += m;
-                        hL += ui;
-                    }
+                    else { if(d.tip === "Gider") kasa -= m; else kasa += m; iL += ui; }
                 }
             });
             document.getElementById('vT').innerText = kasa + "₺";
-            document.getElementById('log-islem').innerHTML = hL;
+            document.getElementById('log-islem').innerHTML = iL;
+            document.getElementById('log-gider').innerHTML = gL;
             document.getElementById('log-borc').innerHTML = bL;
             document.getElementById('log-arsiv').innerHTML = aL;
         });
         unsubs.push(u1);
     }
 
-    async function gunuKapat() {
+    async function zRaporu() {
         const s = document.getElementById('i-sube').value;
         const k = parseInt(document.getElementById('vT').innerText);
-        if(!confirm(`Z RAPORU: ${k}₺ devredilsin mi?`)) return;
-
+        if(!confirm(`Günü kapatıyorsunuz. ${k}₺ devredilecek. Onay?`)) return;
         const snap = await db.collection("islemler").where("sube","==",s).where("arsiv","==",false).get();
         const batch = db.batch();
         snap.forEach(d => { if(d.data().tip !== "Borç") batch.update(d.ref, {arsiv: true}); });
-        const devirRef = db.collection("islemler").doc();
-        batch.set(devirRef, { miktar: k, tip: "DEVİR", sube: s, not: "Dünden Devreden", tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false });
+        const devRef = db.collection("islemler").doc();
+        batch.set(devRef, { miktar: k, tip: "DEVİR", sube: s, not: "Dünden Devreden", tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false });
         await batch.commit();
-        alert("GÜN KAPATILDI.");
+        alert("Z Raporu Kaydedildi.");
     }
 
-    function tab(v) {
-        document.getElementById('main-view').style.display = v === 'main' ? 'block' : 'none';
-        document.getElementById('arsiv-view').style.display = v === 'arsiv' ? 'block' : 'none';
+    function nav(v) {
+        document.getElementById('view-panel').style.display = v === 'pan' ? 'flex' : 'none';
+        document.getElementById('view-arsiv').style.display = v === 'ars' ? 'flex' : 'none';
+        document.getElementById('v-pan').classList.toggle('active', v === 'pan');
+        document.getElementById('v-ars').classList.toggle('active', v === 'ars');
     }
 
-    function setTip(v, el) {
-        tip = v;
-        document.querySelectorAll('.btn-opt').forEach(b => b.classList.remove('active'));
+    function setT(v, el) {
+        curT = v;
+        document.querySelectorAll('.btn-m').forEach(b => { if(!b.classList.contains('blue-mode') && !b.classList.contains('red-mode')) b.classList.remove('active'); });
         el.classList.add('active');
     }
 
     async function kaydet() {
         const m = Number(document.getElementById('i-miktar').value); if(!m) return;
-        await db.collection("islemler").add({
-            miktar: m, tip: tip, sube: document.getElementById('i-sube').value,
-            not: document.getElementById('i-not').value || tip,
-            tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false
-        });
+        await db.collection("islemler").add({ miktar: m, tip: curT, sube: document.getElementById('i-sube').value, not: document.getElementById('i-not').value || curT, tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif", arsiv: false });
         document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
     }
 
