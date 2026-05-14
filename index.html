@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | YÖNETİM</title>
+    <title>CADDE PS | YÖNETİM V2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap');
         :root { --n-blue: #00d2ff; --n-green: #39ff14; --n-purple: #bc13fe; --red: #ff4444; --orange: #ff9f43; --dark-bg: #0a0a0c; }
@@ -30,16 +29,13 @@
         .muhasebe-konteynir { max-width: 1100px; margin: 0 auto; padding: 20px; border-radius: 20px; border: 1px solid var(--n-blue); background: #0a0a0a; }
         .tarih-secici { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; padding: 15px; background: #111; border-radius: 12px; align-items: flex-end; }
         .tarih-secici input, .tarih-secici select { background: #000; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 6px; }
-        .toplam-kartlar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+        .toplam-kartlar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .t-kutu { padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #222; }
         .t-kutu b { display: block; font-size: 20px; font-family: 'Orbitron'; margin-top: 5px; }
         .rapor-tablo { width: 100%; border-collapse: collapse; font-size: 12px; }
         .rapor-tablo th { background: var(--n-blue); color: #000; padding: 12px; text-transform: uppercase; }
         .rapor-tablo td { border-bottom: 1px solid #222; padding: 12px; text-align: center; }
-        .wp-btn { background: #25D366 !important; color: white !important; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 11px; }
-        .tahsil-btn { background: var(--n-green); color: #000; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 900; font-size: 10px; float: right; margin-left: 5px; }
-        .chart-container { background: #111; border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #333; height: 300px; }
-        @media (max-width: 768px) { .main-grid { display: flex; flex-direction: column; } .toplam-kartlar { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px) { .main-grid { display: flex; flex-direction: column; } .toplam-kartlar { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -79,7 +75,7 @@
             <button onclick="gunuKapat()" style="width:100%; padding:15px; background:var(--orange); color:#000; font-weight:900; border:none; border-radius:8px; cursor:pointer; margin-top:10px;">GÜNÜ KAPAT (Z RAPORU)</button>
 
             <div id="admin-area" class="gizli" style="margin-top:20px; border-top:2px dashed #333; padding-top:15px;">
-                <button onclick="document.getElementById('rapor-modal').style.display='block'; arsivGoster('bugun');" style="width:100%; padding:12px; background:var(--n-purple); color:#fff; border:none; font-weight:900; cursor:pointer; border-radius:6px; margin-bottom:10px;">MUHASEBE & ARŞİV</button>
+                <button onclick="document.getElementById('rapor-modal').style.display='block'; arsivGoster();" style="width:100%; padding:12px; background:var(--n-purple); color:#fff; border:none; font-weight:900; cursor:pointer; border-radius:6px; margin-bottom:10px;">MUHASEBE & ARŞİV</button>
             </div>
         </div>
 
@@ -100,22 +96,21 @@
 <div id="rapor-modal">
     <div class="muhasebe-konteynir">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="font-family:'Orbitron'; color:var(--n-blue); margin:0;">MUHASEBE</h2>
+            <h2 style="font-family:'Orbitron'; color:var(--n-blue); margin:0;">MUHASEBE ARŞİVİ</h2>
             <button onclick="document.getElementById('rapor-modal').style.display='none'" style="background:var(--red); color:#fff; border:none; padding:10px 20px; cursor:pointer; font-weight:900; border-radius:8px;">KAPAT</button>
         </div>
         <div class="tarih-secici">
-            <select id="f-sube"><option value="HEPSİ">TÜMÜ</option><option value="CADDEPS 1">CADDEPS 1</option><option value="CADDEPS 2">CADDEPS 2</option></select>
-            <input type="date" id="t-bas">
-            <input type="date" id="t-bit">
-            <button onclick="ozelFiltrele()" style="background:var(--n-blue); color:#000; font-weight:900; padding:11px; border:none; border-radius:6px; cursor:pointer;">LİSTELE</button>
+            <div><label style="font-size:10px; color:#888;">ŞUBE</label><br>
+            <select id="f-sube"><option value="HEPSİ">TÜMÜ</option><option value="CADDEPS 1">CADDEPS 1</option><option value="CADDEPS 2">CADDEPS 2</option></select></div>
+            <div><label style="font-size:10px; color:#888;">BAŞLANGIÇ</label><br><input type="date" id="t-bas"></div>
+            <div><label style="font-size:10px; color:#888;">BİTİŞ</label><br><input type="date" id="t-bit"></div>
+            <button onclick="arsivGoster()" style="background:var(--n-blue); color:#000; font-weight:900; padding:11px 20px; border:none; border-radius:6px; cursor:pointer;">FİLTRELE</button>
         </div>
         <div class="toplam-kartlar">
-            <div class="t-kutu">NAKİT <b id="t-nakit" style="color:var(--n-green)">0₺</b></div>
-            <div class="t-kutu">KART <b id="t-kart" style="color:var(--n-blue)">0₺</b></div>
-            <div class="t-kutu">NET <b id="t-net" style="color:var(--orange)">0₺</b></div>
+            <div class="t-kutu">SEÇİLİ DÖNEM NET <b id="t-net" style="color:var(--orange)">0₺</b></div>
         </div>
         <table class="rapor-tablo">
-            <thead><tr><th>TARİH</th><th>ŞUBE</th><th>PERSONEL</th><th>NET</th></tr></thead>
+            <thead><tr><th>TARİH</th><th>ŞUBE</th><th>KAPATAN</th><th>NET KAZANÇ</th></tr></thead>
             <tbody id="z-body"></tbody>
         </table>
     </div>
@@ -126,7 +121,7 @@
     firebase.initializeApp(config);
     const db = firebase.firestore();
 
-    let userRole = "staff", currentUserName = "", seciliTip = "Nakit", unsubs = [], myChart = null;
+    let userRole = "staff", currentUserName = "", seciliTip = "Nakit", unsubs = [];
 
     async function giris() {
         const k = document.getElementById('k').value.trim().toLowerCase();
@@ -161,9 +156,9 @@
                 let m = Number(d.miktar);
                 if(d.tip !== "Borç" && d.tip !== "Gider") kasa += m;
                 if(d.tip === "Gider") kasa -= m;
+                let silBtn = (userRole === "admin" || d.ekleyen === currentUserName) ? `<button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer;">SİL</button>` : "";
                 let item = `<div style="padding:10px; border-bottom:1px solid #222;">
-                    <span class="personel-tag">${d.ekleyen || "???"}</span> <b>${d.miktar}₺</b> - ${d.not}
-                    <button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer;">SİL</button>
+                    <span class="personel-tag">${d.ekleyen || "???"}</span> <b>${d.miktar}₺</b> - ${d.not} ${silBtn}
                 </div>`;
                 if(d.tip === "Gider") gLog += item; else if(d.tip === "Borç") bLog += item; else log += item;
             });
@@ -181,13 +176,66 @@
 
     async function gunuKapat() {
         const sName = document.getElementById('i-sube').value;
-        if(!confirm("Z Raporu Alınsın mı?")) return;
+        const vT = document.getElementById('vT').innerText.replace('₺','');
+        if(!confirm(sName + " için " + vT + "₺ Z Raporu Alınsın mı?")) return;
+        
         const snap = await db.collection("islemler").where("sube","==",sName).where("durum","==","aktif").where("arsiv","==",false).get();
         const batch = db.batch();
-        snap.forEach(doc => { if(doc.data().tip !== "Borç") batch.update(doc.ref, {arsiv: true}); });
-        await db.collection("z_raporlari").add({ tarih: new Date().toLocaleString('tr-TR'), sube: sName, ts: new Date() });
+        
+        let n=0, k=0, h=0, g=0;
+        snap.forEach(doc => { 
+            const d = doc.data();
+            if(d.tip === "Nakit") n += Number(d.miktar);
+            else if(d.tip === "Kart") k += Number(d.miktar);
+            else if(d.tip === "Havale") h += Number(d.miktar);
+            else if(d.tip === "Gider") g += Number(d.miktar);
+            
+            if(d.tip !== "Borç") batch.update(doc.ref, {arsiv: true}); 
+        });
+
+        await db.collection("z_raporlari").add({ 
+            tarih: new Date().toLocaleString('tr-TR'), 
+            sube: sName, 
+            kapatan: currentUserName,
+            net: (n + k + h) - g,
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
         await batch.commit();
-        alert("Kapatıldı!"); location.reload();
+        alert("Gün Başarıyla Kapatıldı!"); location.reload();
+    }
+
+    async function arsivGoster() {
+        const fSube = document.getElementById('f-sube').value;
+        const bInput = document.getElementById('t-bas').value;
+        const sInput = document.getElementById('t-bit').value;
+        
+        let q = db.collection("z_raporlari").orderBy("ts", "desc");
+        
+        if(bInput && sInput) {
+            let start = new Date(bInput); start.setHours(0,0,0,0);
+            let end = new Date(sInput); end.setHours(23,59,59,999);
+            q = q.where("ts", ">=", start).where("ts", "<=", end);
+        }
+
+        const snap = await q.get();
+        let html = "", toplamNet = 0;
+        
+        snap.forEach(doc => {
+            const d = doc.data();
+            if(fSube === "HEPSİ" || d.sube === fSube) {
+                toplamNet += Number(d.net || 0);
+                html += `<tr>
+                    <td>${d.tarih}</td>
+                    <td>${d.sube}</td>
+                    <td>${d.kapatan || 'Sistem'}</td>
+                    <td style="color:var(--n-green)"><b>${d.net || 0}₺</b></td>
+                </tr>`;
+            }
+        });
+        
+        document.getElementById('z-body').innerHTML = html || "<tr><td colspan='4'>Kayıt bulunamadı.</td></tr>";
+        document.getElementById('t-net').innerText = toplamNet + "₺";
     }
 
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
