@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v20.5 FINAL</title>
+    <title>CADDE PS | v20.6 FINAL</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -20,7 +20,7 @@
         input, select { width: 100%; padding: 12px; margin-bottom: 8px; background: #000; border: 1px solid #333; color: #fff; box-sizing: border-box; border-radius: 5px; font-family: 'Rajdhani'; }
         .action-btn { width: 100%; padding: 12px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-family: 'Orbitron'; font-size: 11px; margin-bottom: 5px; }
         .gizli { display: none !important; }
-        .p-card { background: #111; padding: 10px; margin-bottom: 5px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; }
+        .p-card { background: #111; padding: 10px; margin-bottom: 5px; border: 1px solid #222; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .vardiya-box { border: 1px solid var(--gold); padding: 10px; border-radius: 5px; margin-top: 15px; background: #080808; }
         @media (max-width: 1024px) { .main-grid { display: flex; flex-direction: column; } }
     </style>
@@ -70,7 +70,9 @@
 
             <div id="admin-panel" class="gizli" style="margin-top:20px; border-top:2px solid var(--purple); padding-top:15px;">
                 <button onclick="arsivAc()" class="action-btn" style="background:var(--purple); color:#fff; margin-bottom:10px;">📊 MUHASEBE ARŞİVİ</button>
+                <h4 style="color:var(--purple); font-size:12px; margin-bottom:10px;">PERSONEL TAKİBİ</h4>
                 <div id="personel-listesi"></div>
+                <button onclick="pEkleModali()" class="action-btn" style="background:#222; color:var(--purple); border:1px solid var(--purple); margin-top:10px;">+ YENİ PERSONEL EKLE</button>
             </div>
         </div>
 
@@ -102,6 +104,16 @@
             <button onclick="arsivGetir()" class="action-btn" style="background:var(--gold); color:#000; width:120px; margin:0;">SORGULA</button>
         </div>
         <div id="arsiv-sonuc" class="log-box" style="height:60vh;"></div>
+    </div>
+</div>
+
+<div id="p-ekle-modal" class="gizli" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2100; display:flex; align-items:center; justify-content:center;">
+    <div style="width:300px; background:#0a0a0a; padding:30px; border:1px solid var(--n-blue);">
+        <h3 style="color:var(--n-blue); margin-top:0;">PERSONEL EKLE</h3>
+        <input type="text" id="yeni-p-ad" placeholder="Kullanıcı Adı">
+        <input type="password" id="yeni-p-sifre" placeholder="Şifre">
+        <button onclick="pKaydet()" class="action-btn" style="background:var(--n-blue); color:#000;">KAYDET</button>
+        <button onclick="modalKapat('p-ekle-modal')" class="action-btn" style="background:#333; color:#fff;">İPTAL</button>
     </div>
 </div>
 
@@ -178,7 +190,6 @@
             document.getElementById('kasa-detay').innerText = `Kasadaki Nakit: ${nT + SABIT_KASA}₺ | Kart: ${kT}₺`;
             document.getElementById('vT').innerText = (nT + kT + SABIT_KASA) + "₺";
             document.getElementById('islem-log').innerHTML = log;
-            
             pNakit = vN; pKart = vK;
             document.getElementById('v-nakit').innerHTML = `Nakit Tahsilat: ${vN}₺ <br><small>(Kasa: ${vN + SABIT_KASA}₺)</small>`;
             document.getElementById('v-kart').innerText = `Kart Tahsilat: ${vK}₺`;
@@ -246,15 +257,25 @@
         let h = "", opts = '<option value="hepsi">Tüm Personeller</option>';
         snap.forEach(doc => {
             const p = doc.data();
-            h += `<div class="p-card"><span>${p.ad.toUpperCase()}</span><button onclick="pSil('${doc.id}')" style="background:none; color:red; border:none; cursor:pointer;">SİL</button></div>`;
+            h += `<div class="p-card"><span>${p.ad.toUpperCase()}</span><button onclick="pSil('${doc.id}')" style="background:none; color:red; border:none; cursor:pointer; font-weight:bold;">SİL</button></div>`;
             opts += `<option value="${p.ad}">${p.ad.toUpperCase()}</option>`;
         });
         document.getElementById('personel-listesi').innerHTML = h;
         document.getElementById('arsiv-p-filtre').innerHTML = opts;
     }
 
+    async function pKaydet() {
+        const ad = document.getElementById('yeni-p-ad').value.trim().toLowerCase();
+        const sifre = document.getElementById('yeni-p-sifre').value.trim();
+        if(ad && sifre) { await db.collection("personeller").add({ ad, sifre }); modalKapat('p-ekle-modal'); personelleriYukle(); }
+    }
+
+    async function pSil(id) { if(confirm("Personeli silmek istediğinize emin misiniz?")) { await db.collection("personeller").doc(id).delete(); personelleriYukle(); } }
+    async function tSil(id) { if(confirm("İşlemi silmek istediğinize emin misiniz?")) await db.collection("islemler").doc(id).delete(); }
+
     function cikisYap() { localStorage.removeItem('cadde_session_v2'); location.reload(); }
     function arsivAc() { document.getElementById('arsiv-modal').classList.remove('gizli'); }
+    function pEkleModali() { document.getElementById('p-ekle-modal').classList.remove('gizli'); }
     function modalKapat(id) { document.getElementById(id).classList.add('gizli'); }
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { if(document.getElementById('saat')) document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
