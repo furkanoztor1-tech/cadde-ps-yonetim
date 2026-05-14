@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v45.0 FIXED CASH</title>
+    <title>CADDE PS | v46.0 DYNAMIC SETTINGS</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -66,7 +66,7 @@
             </div>
 
             <div class="glass" style="border:1px solid var(--gold); margin-top:10px; text-align:center;">
-                <p style="color:var(--gold); font-size:11px; margin:0;">SENİN VARDİYAN</p>
+                <p style="color:var(--gold); font-size:11px; margin:0;">GÜNCEL VARDİYANIZ</p>
                 <div id="v-nakit" style="font-size:26px; color:var(--n-green); font-weight:bold;">0₺</div>
                 <div id="v-kart" style="font-size:20px; color:var(--n-blue);">0₺</div>
                 <button onclick="vardiyaBitir()" class="action-btn" style="background:var(--gold); color:#000; margin-top:10px; font-size:11px;">TESLİM ET & WP RAPOR</button>
@@ -75,7 +75,7 @@
 
         <div class="glass">
             <div id="admin-kasa" class="gizli" style="text-align:center; border:2px solid var(--n-green); padding:10px; border-radius:10px; margin-bottom:10px;">
-                <div style="font-size:11px; color:var(--n-green);">GÜNLÜK TOPLAM (+200₺ SABİT)</div>
+                <div style="font-size:11px; color:var(--n-green);">ANLIK KASA (+200₺ SABİT)</div>
                 <div id="vT" style="font-size:32px; font-family:'Orbitron'; color:#fff;">200₺</div>
             </div>
             <h4 style="color:var(--n-blue); font-size:12px; margin:0;">SON İŞLEMLER</h4>
@@ -91,11 +91,11 @@
 
 <div id="rapor-ekran" class="modal gizli">
     <div style="max-width:800px; margin:auto; background:#0a0a0a; padding:20px; border:1px solid #333; border-radius:10px;">
-        <button onclick="raporKapat()" style="float:right; background:red; color:#fff; border:none; padding:10px;">X</button>
+        <button onclick="raporKapat()" style="float:right; background:red; color:#fff; border:none; padding:10px;">KAPAT</button>
         <h2 style="color:var(--gold);">ARŞİV</h2>
         <input type="date" id="r-bas">
         <input type="date" id="r-bit">
-        <button onclick="sorgula()" class="action-btn" style="background:var(--n-blue); color:#000;">FİLTRELE</button>
+        <button onclick="sorgula()" class="action-btn" style="background:var(--n-blue); color:#000;">LİSTELE</button>
         <div id="r-liste" class="log-box"></div>
     </div>
 </div>
@@ -105,12 +105,17 @@
     firebase.initializeApp(config);
     const db = firebase.firestore();
 
-    const SESSION_KEY = 'cadde_v45_session';
-    let userRole = "staff", currentUserName = "", unsubs = [], seciliTip = "Nakit";
+    const SESSION_KEY = 'cadde_v46_session';
+    let userRole = "staff", currentUserName = "", unsubs = [], seciliTip = "Nakit", patronTel = "";
     let vn = 0, vk = 0, vg = 0;
 
     (function init() {
         const session = localStorage.getItem(SESSION_KEY);
+        // Veritabanından patron numarasını çek
+        db.collection("ayarlar").doc("patron").get().then(doc => {
+            if(doc.exists) patronTel = doc.data().tel || "";
+        });
+
         if(session) {
             const s = JSON.parse(session);
             userRole = s.role; currentUserName = s.name.toLowerCase();
@@ -132,7 +137,7 @@
                 userRole="staff"; currentUserName=k;
                 localStorage.setItem(SESSION_KEY, JSON.stringify({role:"staff", name:k}));
                 panelBaslat();
-            } else alert("Giriş Hatalı!");
+            } else alert("Hatalı Giriş!");
         }
     }
 
@@ -173,11 +178,10 @@
             vn = tvn; vk = tvk; vg = tvg;
             document.getElementById('v-nakit').innerText = vn + "₺";
             document.getElementById('v-kart').innerText = vk + "₺";
-            // KASAYA SABİT 200 EKLEME BURADA:
             document.getElementById('vT').innerText = (total24 + 200) + "₺";
             
             docs.sort((a,b) => b.tarih - a.tarih).slice(0,20).forEach(d => {
-                logH += `<div class="islem-satir"><span><b>${d.miktar}₺</b> - ${d.not}</span> <small>${d.tip} (${d.ekleyen})</small></div>`;
+                logH += `<div class="islem-satir"><span><b>${d.miktar}₺</b> - ${d.not}</span> <small>${d.tip}</small></div>`;
             });
             document.getElementById('islem-log').innerHTML = logH;
         });
@@ -207,9 +211,14 @@
     }
 
     async function vardiyaBitir() {
-        if(!confirm("Vardiyayı teslim edip sıfırlıyorsun. Emin misin?")) return;
+        if(!confirm("Vardiyayı kapatıyorsun. Onay?")) return;
+        
+        // Numarayı o an tekrar veritabanından teyit et
+        const patronDoc = await db.collection("ayarlar").doc("patron").get();
+        const aktifNumara = patronDoc.data().tel || patronTel;
+
         const sube = document.getElementById('i-sube').value;
-        const rapor = `🛑 VARDİYA TESLİMİ\n------------------\n👤 Personel: ${currentUserName.toUpperCase()}\n📍 Şube: ${sube}\n💵 Nakit: ${vn}₺\n💳 Kart: ${vk}₺\n📉 Gider: ${vg}₺\n💰 Toplam: ${vn+vk}₺\n------------------`;
+        const rapor = `🏁 VARDİYA SONU\n👤: ${currentUserName.toUpperCase()}\n📍: ${sube}\n💵 Nakit: ${vn}₺\n💳 Kart: ${vk}₺\n📉 Gider: ${vg}₺\n💰 Net: ${vn+vk}₺`;
         
         const snap = await db.collection("islemler").where("sube","==",sube).where("ekleyen","==",currentUserName).where("v_durum","==","acik").get();
         const batch = db.batch();
@@ -220,15 +229,18 @@
         document.getElementById('v-nakit').innerText = "0₺";
         document.getElementById('v-kart').innerText = "0₺";
 
-        window.open(`https://wa.me/905393774554?text=${encodeURIComponent(rapor)}`, '_blank');
-        alert("Vardiya teslim edildi.");
+        if(aktifNumara) {
+            window.open(`https://wa.me/${aktifNumara}?text=${encodeURIComponent(rapor)}`, '_blank');
+        } else {
+            alert("Rapor Hazır Ama Patron Numarası Kayıtlı Değil!\n\n" + rapor);
+        }
     }
 
     async function borcOde(id, m, n) {
         await db.collection("islemler").doc(id).update({durum:"odendi"});
         await db.collection("islemler").add({
             miktar: m, tip: "Nakit", sube: document.getElementById('i-sube').value,
-            not: "[BORÇ ÖDEME] " + n, tarih: Date.now(), durum: "aktif", v_durum: "acik", ekleyen: currentUserName
+            not: "[BORÇ TAHSİL] " + n, tarih: Date.now(), durum: "aktif", v_durum: "acik", ekleyen: currentUserName
         });
     }
 
@@ -241,7 +253,7 @@
             const d = doc.data();
             h += `<div class="islem-satir"><span>${new Date(d.tarih).toLocaleDateString()}</span><span>${d.miktar}₺ - ${d.tip}</span></div>`;
         });
-        document.getElementById('r-liste').innerHTML = h || "Kayıt yok.";
+        document.getElementById('r-liste').innerHTML = h;
     }
 
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); seciliTip = btn.getAttribute('data-val'); }
