@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | MANAGEMENT</title>
+    <title>CADDE PS | YÖNETİM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600;700&display=swap');
         
         body, html { 
             margin: 0; padding: 0; 
@@ -17,29 +17,28 @@
             height: 100vh;
         }
 
-        .container { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .main-container { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
 
-        .kasa-card {
+        .kasa-header {
             background: #000;
             border: 1px solid #39ff14;
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 15px;
             text-align: center;
         }
-        .kasa-label { font-family: 'Orbitron'; font-size: 10px; color: #555; display: block; }
-        .kasa-val { font-family: 'Orbitron'; font-size: 28px; color: #39ff14; }
+        .kasa-tutar { font-family: 'Orbitron'; font-size: 28px; color: #39ff14; }
 
-        .form-card {
+        .islem-form {
             background: #111;
+            border-radius: 10px;
+            padding: 12px;
             border: 1px solid #222;
-            border-radius: 12px;
-            padding: 10px;
         }
 
         select, input {
             width: 100%;
             padding: 12px;
-            margin-bottom: 8px;
+            margin-bottom: 7px;
             background: #000;
             border: 1px solid #333;
             color: #fff;
@@ -47,7 +46,7 @@
             box-sizing: border-box;
         }
 
-        .btn-grid {
+        .tipler {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 5px;
@@ -70,7 +69,7 @@
             color: #00d2ff;
         }
 
-        .save-btn {
+        .kaydet-btn {
             width: 100%;
             padding: 15px;
             background: #39ff14;
@@ -81,59 +80,66 @@
             font-weight: 700;
         }
 
-        .log-section { flex-grow: 1; display: flex; flex-direction: column; gap: 8px; }
-        .log-win { background: #000; border: 1px solid #1a1a1a; border-radius: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .log-h { background: #151518; padding: 8px; font-family: 'Orbitron'; font-size: 9px; color: #00d2ff; border-bottom: 1px solid #222; }
-        .log-b { flex-grow: 1; overflow-y: auto; padding: 5px; }
+        .logs-container { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; }
+        .log-box { background: #000; border: 1px solid #1a1a1a; border-radius: 10px; }
+        .log-title { background: #151518; padding: 7px 12px; font-family: 'Orbitron'; font-size: 9px; color: #00d2ff; border-bottom: 1px solid #222; }
+        .log-list { max-height: 200px; overflow-y: auto; }
 
-        .item { padding: 10px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; align-items: center; }
-        .i-val { font-family: 'Orbitron'; font-size: 16px; color: #fff; }
-        .i-not { color: #888; font-size: 13px; margin-left: 8px; }
-
-        .ode-btn { background: #39ff14; color: #000; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; font-size: 11px; }
+        .log-item {
+            padding: 10px;
+            border-bottom: 1px solid #111;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-val { font-family: 'Orbitron'; font-size: 17px; color: #fff; }
+        .item-not { color: #888; font-size: 13px; margin-left: 8px; }
+        
+        .ode-button { background: #39ff14; color: #000; border: none; padding: 6px 12px; border-radius: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="kasa-card">
-        <span class="kasa-label">GÜNCEL NET KASA</span>
-        <div class="kasa-val" id="vT">0₺</div>
+<div class="main-container">
+    <div class="kasa-header">
+        <div style="font-family:'Orbitron'; font-size:10px; color:#555">GÜNCEL KASA</div>
+        <div class="kasa-tutar" id="kasaGosterge">0₺</div>
     </div>
 
-    <div class="form-card">
-        <select id="i-sube" onchange="verileriGetir()">
+    <div class="islem-form">
+        <select id="subeSec">
             <option value="CADDEPS 1">ŞUBE 1 (CADDE)</option>
             <option value="CADDEPS 2">ŞUBE 2 (CADDE)</option>
         </select>
 
-        <div class="btn-grid">
-            <div class="t-btn active" onclick="setT('Nakit', this)">NAKİT</div>
-            <div class="t-btn" onclick="setT('Kart', this)">KART</div>
-            <div class="t-btn" onclick="setT('Havale', this)">HAVALE</div>
-            <div class="t-btn" onclick="setT('Gider', this)">GİDER</div>
-            <div class="t-btn" onclick="setT('Borç', this)">BORÇ</div>
+        <div class="tipler">
+            <div class="t-btn active" onclick="tipSec('Nakit', this)">NAKİT</div>
+            <div class="t-btn" onclick="tipSec('Kart', this)">KART</div>
+            <div class="t-btn" onclick="tipSec('Havale', this)">HAVALE</div>
+            <div class="t-btn" onclick="tipSec('Gider', this)">GİDER</div>
+            <div class="t-btn" onclick="tipSec('Borç', this)">BORÇ</div>
         </div>
 
-        <input type="number" id="i-miktar" placeholder="Tutar ₺" inputmode="decimal">
-        <input type="text" id="i-not" placeholder="Açıklama...">
-        <button class="save-btn" onclick="kaydet()">İŞLEMİ KAYDET</button>
+        <input type="number" id="miktar" placeholder="Tutar ₺" inputmode="decimal">
+        <input type="text" id="not" placeholder="Açıklama veya İsim...">
+        <button class="kaydet-btn" onclick="veriyiKaydet()">İŞLEMİ KAYDET</button>
     </div>
 
-    <div class="log-section">
-        <div class="log-win">
-            <div class="log-h">AKTİF BORÇLAR</div>
-            <div class="log-b" id="log-borc"></div>
+    <div class="logs-container">
+        <div class="log-box">
+            <div class="log-title">AKTİF BORÇLAR</div>
+            <div id="borcListesi" class="log-list"></div>
         </div>
-        <div class="log-win">
-            <div class="log-h">GÜNLÜK İŞLEMLER</div>
-            <div class="log-b" id="log-islem"></div>
+        <div class="log-box">
+            <div class="log-title">BUGÜNKÜ İŞLEMLER</div>
+            <div id="islemListesi" class="log-list"></div>
         </div>
     </div>
 </div>
 
 <script>
-    const config = { 
+    // BUGÜNÜN İLK KODUNDAKİ ASIL AYARLAR
+    const firebaseConfig = { 
         apiKey: "AIzaSyA1Yr6u_z0eQV5a_8_5wRSvLrqcV6vUmI8", 
         authDomain: "cadde-yonetim.firebaseapp.com", 
         projectId: "cadde-yonetim", 
@@ -141,59 +147,78 @@
         messagingSenderId: "578914689738", 
         appId: "1:578914689738:web:70c71a96e0eea69b0bca33" 
     };
-    firebase.initializeApp(config);
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let curT = "Nakit", un = null;
+    let seciliTip = "Nakit";
+    let dinleyici = null;
 
-    function verileriGetir() {
-        const s = document.getElementById('i-sube').value;
-        if(un) un();
-        un = db.collection("islemler").where("sube", "==", s).orderBy("tarih", "desc").onSnapshot(snap => {
-            let kasa = 0, iH = "", bH = "";
-            snap.forEach(doc => {
-                const d = doc.data();
-                const m = Number(d.miktar) || 0;
-                const h = `<div class="item"><div><span class="i-val">${m}₺</span><span class="i-not">${d.not}</span></div>
-                    ${d.tip === 'Borç' && d.durum === 'aktif' ? `<button class="ode-btn" onclick="ode('${doc.id}', ${m}, '${d.not}')">ÖDE</button>` : ''}</div>`;
-                
-                if(d.tip === 'Borç' && d.durum === 'aktif') bH += h;
-                else if(d.durum === 'aktif') {
-                    if(d.tip === 'Gider') kasa -= m; else kasa += m;
-                    iH += h;
-                }
+    function verileriYukle() {
+        const sube = document.getElementById('subeSec').value;
+        if(dinleyici) dinleyici();
+
+        dinleyici = db.collection("islemler")
+            .where("sube", "==", sube)
+            .orderBy("tarih", "desc")
+            .onSnapshot(snap => {
+                let toplamKasa = 0;
+                let islemHtml = "";
+                let borcHtml = "";
+
+                snap.forEach(doc => {
+                    const veri = doc.data();
+                    const m = Number(veri.miktar) || 0;
+                    
+                    let satir = `<div class="log-item">
+                        <div><span class="item-val">${m}₺</span><span class="item-not">${veri.not}</span></div>`;
+                    
+                    if(veri.tip === "Borç" && veri.durum === "aktif") {
+                        borcHtml += satir + `<button class="ode-button" onclick="borcOde('${doc.id}', ${m}, '${veri.not}')">ÖDE</button></div>`;
+                    } else if(veri.durum === "aktif") {
+                        if(veri.tip === "Gider") toplamKasa -= m; else toplamKasa += m;
+                        islemHtml += satir + `</div>`;
+                    }
+                });
+
+                document.getElementById('kasaGosterge').innerText = toplamKasa + "₺";
+                document.getElementById('islemListesi').innerHTML = islemHtml;
+                document.getElementById('borcListesi').innerHTML = borcHtml;
             });
-            document.getElementById('vT').innerText = kasa + "₺";
-            document.getElementById('log-islem').innerHTML = iH;
-            document.getElementById('log-borc').innerHTML = bH;
-        });
     }
 
-    async function kaydet() {
-        const m = Number(document.getElementById('i-miktar').value); if(!m) return;
+    async function veriyiKaydet() {
+        const m = Number(document.getElementById('miktar').value);
+        const n = document.getElementById('not').value || seciliTip;
+        if(!m) return;
+
         await db.collection("islemler").add({
-            miktar: m, tip: curT, sube: document.getElementById('i-sube').value,
-            not: document.getElementById('i-not').value || curT,
-            tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif"
+            miktar: m, tip: seciliTip, not: n,
+            sube: document.getElementById('subeSec').value,
+            tarih: firebase.firestore.FieldValue.serverTimestamp(),
+            durum: "aktif"
         });
-        document.getElementById('i-miktar').value = ""; document.getElementById('i-not').value = "";
+        document.getElementById('miktar').value = "";
+        document.getElementById('not').value = "";
     }
 
-    async function ode(id, m, n) {
+    async function borcOde(id, m, n) {
         await db.collection("islemler").doc(id).update({durum: "kapali"});
         await db.collection("islemler").add({
-            miktar: m, tip: "Nakit", sube: document.getElementById('i-sube').value,
-            not: "[ÖDENDİ] " + n, tarih: firebase.firestore.FieldValue.serverTimestamp(), durum: "aktif"
+            miktar: m, tip: "Nakit", not: "[ÖDENDİ] " + n,
+            sube: document.getElementById('subeSec').value,
+            tarih: firebase.firestore.FieldValue.serverTimestamp(),
+            durum: "aktif"
         });
     }
 
-    function setT(v, el) {
-        curT = v;
+    function tipSec(t, el) {
+        seciliTip = t;
         document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
     }
 
-    window.onload = verileriGetir;
+    document.getElementById('subeSec').addEventListener('change', verileriYukle);
+    window.onload = verileriYukle;
 </script>
 </body>
 </html>
