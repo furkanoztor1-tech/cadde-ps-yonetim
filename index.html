@@ -165,7 +165,9 @@
 
     function verileriGetir() {
         const sube = document.getElementById('i-sube').value;
-        unsubs.forEach(u => u());
+        unsubs.forEach(u => { if(typeof u === 'function') u(); });
+        unsubs = []; 
+        
         let simdi = new Date();
         let bas = new Date(simdi); if(bas.getHours() < 2) bas.setDate(bas.getDate()-1); bas.setHours(2,0,0,0);
         let bit = new Date(bas); bit.setDate(bit.getDate()+1);
@@ -177,9 +179,12 @@
                 if(d.durum === "aktif") {
                     if(d.tip==="Nakit") nT += d.miktar;
                     if(d.tip==="Kart") kT += d.miktar;
+                    if(d.tip==="Gider") nT -= d.miktar; 
+                    
                     if(d.ekleyen === currentUserName) {
                         if(d.tip==="Nakit") vN += d.miktar;
                         if(d.tip==="Kart") vK += d.miktar;
+                        if(d.tip==="Gider") vN -= d.miktar;
                     }
                 }
                 log += `<div style="padding:10px; border-bottom:1px solid #111; display:flex; justify-content:space-between;">
@@ -224,9 +229,70 @@
     }
 
     async function vardiyaBitir() {
+        const sube = document.getElementById('i-sube').value;
         if(confirm(`Dükkanı Kapatıyorsunuz.\nSizin Topladığınız Nakit: ${pNakit}₺\nSizin Topladığınız Kart: ${pKart}₺\n(200₺ Kasada bırakılacaktır.)\nOnaylıyor musunuz?`)) {
-            await db.collection("islemler").add({ miktar: 0, tip: "BİLGİ", not: `KAPANIŞ: ${pNakit}₺ teslim, ${SABIT_KASA}₺ kasada kaldı.`, tarih: new Date(), ekleyen: currentUserName, sube: document.getElementById('i-sube').value, durum: "info" });
-            cikisYap();
+            try {
+                let simdi = new Date();
+                let bas = new Date(simdi); if(bas.getHours() < 2) bas.setDate(bas.getDate()-1); bas.setHours(2,0,0,0);
+                let bit = new Date(bas); bit.setDate(bit.getDate()+1);
+
+                const snap = await db.collection("islemler")
+                    .where("sube", "==", sube)
+                    .where("tarih", ">=", bas)
+                    .where("tarih", "<", bit)
+                    .get();
+
+                let islemlerDizisi = [];
+                snap.forEach(doc => {
+                    let data = doc.data();
+                    data.id = doc.id;
+                    islemlerDizisi.push(data);
+                });
+                islemlerDizisi.sort((a, b) => a.tarih - b.tarih);
+
+                let wpMesaj = `📊 *CADDE PS - GÜN SONU RAPORU*\n`;
+                wpMesaj += `🏪 *Şube:* ${sube}\n`;
+                wpMesaj += `👤 *Kapatan Personel:* ${currentUserName.toUpperCase()}\n`;
+                wpMesaj += `📅 *Rapor Saati:* ${new Date().toLocaleTimeString('tr-TR')}\n`;
+                wpMesaj += `------------------------------------------\n\n`;
+                
+                wpMesaj += `💰 *CİRO ÖZETİ*\n`;
+                wpMesaj += `• Teslim Edilen Nakit: ${pNakit} ₺\n`;
+                wpMesaj += `• Toplanan Kart: ${pKart} ₺\n`;
+                wpMesaj += `• Kasada Bırakılan: ${SABIT_KASA} ₺ (SABİT)\n`;
+                wpMesaj += `------------------------------------------\n\n`;
+                
+                wpMesaj += `📝 *İŞLEM DETAYLARI (SAAT SAAT)*\n`;
+                
+                let sayac = 1;
+                islemlerDizisi.forEach(d => {
+                    if(d.durum === "aktif") {
+                        let islemSaati = "00:00";
+                        if(d.tarih) {
+                            const t = d.tarih.toDate ? d.tarih.toDate() : new Date(d.tarih);
+                            islemSaati = t.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                        }
+                        wpMesaj += `🕒 ${islemSaati} -> *${d.miktar}₺* - ${d.not || d.tip} (${d.ekleyen})\n`;
+                        sayac++;
+                    }
+                });
+                
+                if(sayac === 1) wpMesaj += `_Bugün hiç işlem kaydı girilmedi._\n`;
+                wpMesaj += `\n------------------------------------------\n`;
+                wpMesaj += `🔐 _Bu rapor sistem tarafından otomatik üretilmiştir._`;
+
+                await db.collection("islemler").add({ miktar: 0, tip: "BİLGİ", not: `KAPANIŞ: ${pNakit}₺ teslim, ${SABIT_KASA}₺ kasada kaldı.`, tarih: new Date(), ekleyen: currentUserName, sube: sube, durum: "info" });
+
+                const patronNo = "905393774554"; 
+                const wpUrl = `https://api.whatsapp.com/send?phone=${patronNo}&text=${encodeURIComponent(wpMesaj)}`;
+                
+                window.open(wpUrl, '_blank');
+                cikisYap();
+            } catch (hata) {
+                console.error("Rapor hatası:", hata);
+                alert("Rapor hazırlanırken hata oluştu.");
+                cikisYap();
+            }
         }
     }
 
