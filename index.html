@@ -3,74 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | MODERN</title>
+    <title>CADDE PS | FULL VERSION</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600;700&display=swap');
-        :root { --n-blue: #00d2ff; --n-green: #39ff14; --red: #ff4444; --dark-bg: #0a0a0c; }
-        body { margin: 0; font-family: 'Rajdhani', sans-serif; background: var(--dark-bg); color: #fff; -webkit-tap-highlight-color: transparent; }
-        .container { padding: 10px; max-width: 500px; margin: auto; }
-        
-        /* KASA KARTI */
-        .stat-card { background: #000; border: 1px solid var(--n-green); border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; box-shadow: 0 0 15px rgba(57,255,20,0.1); }
-        
-        /* GİRİŞ ALANI */
-        .glass { background: #111; border-radius: 12px; border: 1px solid #222; padding: 12px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; margin-bottom: 8px; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
-        
-        /* TİP BUTONLARI */
-        .t-btn-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin-bottom: 10px; }
-        .t-btn { padding: 8px 2px; border: 1px solid #222; text-align: center; font-size: 10px; cursor: pointer; border-radius: 5px; background: #050505; color: #777; font-weight: bold; }
-        .t-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,210,255,0.05); }
-
-        /* LİSTE TASARIMI (MINIMIZE) */
-        .section-title { font-family: 'Orbitron'; font-size: 11px; color: var(--n-blue); margin: 15px 0 8px 5px; letter-spacing: 1px; }
-        .log-container { background: #080808; border-radius: 10px; overflow: hidden; }
-        
-        .islem-item { padding: 10px 12px; border-bottom: 1px solid #151515; display: flex; justify-content: space-between; align-items: center; position: relative; }
-        .item-info { flex-grow: 1; }
-        .item-amount { font-family: 'Orbitron'; font-size: 15px; color: #eee; }
-        .item-not { font-size: 13px; color: #aaa; margin-left: 5px; }
-        .item-meta { font-size: 10px; color: #555; display: block; margin-top: 2px; }
-
-        /* ÖDE BUTONLARI (KÜÇÜK) */
-        .btn-pay { padding: 6px 10px; font-size: 10px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; margin-left: 5px; }
-        .btn-nakit { background: var(--n-green); color: #000; }
-        .btn-kart { background: var(--n-blue); color: #000; }
-        
-        /* SİL BUTONU (ZARİF) */
-        .btn-sil { background: transparent; border: 1px solid #333; color: #444; padding: 4px 8px; font-size: 9px; border-radius: 4px; cursor: pointer; transition: 0.3s; }
-        .btn-sil:hover { border-color: var(--red); color: var(--red); }
-
-        .btn-main { width: 100%; padding: 15px; background: var(--n-green); color: #000; font-weight: 900; border: none; border-radius: 8px; cursor: pointer; font-family: 'Orbitron'; font-size: 14px; }
+        :root { --n-blue: #00d2ff; --n-green: #39ff14; --red: #ff4444; --orange: #ff9f43; --dark-bg: #0a0a0c; }
+        body, html { margin: 0; padding: 0; font-family: 'Rajdhani', sans-serif; background: var(--dark-bg); color: #fff; overflow-x: hidden; }
+        .container { display: flex; flex-direction: column; gap: 15px; padding: 10px; max-width: 600px; margin: auto; padding-bottom: 50px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #000; border-bottom: 2px solid var(--n-blue); position: sticky; top: 0; z-index: 100; }
+        .glass { background: rgba(255,255,255,0.03); border-radius: 15px; border: 1px solid #222; padding: 15px; }
+        .t-btn { padding: 12px; border: 1px solid #333; border-radius: 8px; background: #000; color: #fff; cursor: pointer; text-align: center; font-size: 11px; font-weight: bold; }
+        .t-btn.active { border-color: var(--n-blue); color: var(--n-blue); box-shadow: 0 0 10px rgba(0,210,255,0.2); }
+        .log-container { background: #050505; border-radius: 12px; border: 1px solid #111; margin-top: 5px; min-height: 50px; }
+        .islem-item { padding: 15px; border-bottom: 1px solid #222; position: relative; }
+        .stat-card { background: #000; border: 2px solid var(--n-green); border-radius: 15px; padding: 20px; text-align: center; }
+        input, select { width: 100%; padding: 15px; margin-bottom: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 10px; box-sizing: border-box; font-size: 16px; font-family: 'Rajdhani'; }
+        .action-btn { padding: 10px 15px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .section-title { margin: 20px 0 10px 5px; font-family: 'Orbitron'; font-size: 13px; color: var(--n-blue); text-transform: uppercase; }
+        .btn-green { width: 100%; padding: 20px; background: var(--n-green); color: #000; font-weight: 900; border: none; border-radius: 12px; cursor: pointer; font-family: 'Orbitron'; }
     </style>
 </head>
 <body>
 
-<div id="login-ekran" style="padding:100px 30px; text-align:center;">
-    <h1 style="font-family:'Orbitron'; font-size:24px;">CADDE <span style="color:var(--n-blue)">PS</span></h1>
-    <input type="text" id="k" placeholder="Kullanıcı">
-    <input type="password" id="s" placeholder="Şifre">
-    <button onclick="giris()" class="btn-main" style="background:var(--n-blue); margin-top:10px;">GİRİŞ</button>
+<div id="login-ekran" style="height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;">
+    <div style="width:100%; max-width:320px; padding:30px; background:#111; border-radius:20px; border:1px solid #333; text-align:center;">
+        <h2 style="font-family:'Orbitron'">CADDE <span style="color:var(--n-blue)">PS</span></h2>
+        <input type="text" id="k" placeholder="Kullanıcı Adı">
+        <input type="password" id="s" placeholder="Şifre">
+        <button onclick="giris()" style="width:100%; padding:15px; background:var(--n-blue); border:none; border-radius:10px; color:#fff; font-weight:900; cursor:pointer;">GİRİŞ</button>
+    </div>
 </div>
 
 <div id="panel" style="display:none;">
+    <div class="top-bar">
+        <div id="saat" style="font-family:'Orbitron'; color:var(--n-blue); font-size:14px;">00:00:00</div>
+        <button onclick="cikisYap()" style="background:var(--red); border:none; color:#fff; padding:5px 12px; border-radius:6px;">ÇIKIŞ</button>
+    </div>
+
     <div class="container">
-        <!-- KASA -->
         <div class="stat-card">
-            <small style="color:#555; font-weight:bold;">GÜNCEL KASA</small><br>
-            <b id="vT" style="font-size:32px; color:var(--n-green); font-family:'Orbitron'">0₺</b>
+            <small style="color:#888;">GÜNCEL KASA</small><br>
+            <b id="vT" style="font-size:45px; color:var(--n-green); font-family:'Orbitron'">0₺</b>
+            <div style="display:flex; justify-content: space-around; margin-top:15px; border-top:1px solid #222; padding-top:10px;">
+                <div><small style="color:var(--n-blue)">NAKİT</small><br><b id="vNakit">0₺</b></div>
+                <div><small style="color:var(--orange)">KART</small><br><b id="vKart">0₺</b></div>
+            </div>
         </div>
 
-        <!-- KAYIT -->
         <div class="glass">
-            <select id="i-sube" onchange="verileriGetir()" style="color:var(--n-blue); font-weight:bold; border-color:var(--n-blue);">
+            <select id="i-sube" onchange="verileriGetir()">
                 <option value="CADDEPS 1">ŞUBE 1</option>
                 <option value="CADDEPS 2">ŞUBE 2</option>
             </select>
             
-            <div class="t-btn-group">
+            <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:5px; margin-bottom:15px;">
                 <div class="t-btn active" onclick="sec(this, 'Nakit')">NAKİT</div>
                 <div class="t-btn" onclick="sec(this, 'Kart')">KART</div>
                 <div class="t-btn" onclick="sec(this, 'Havale')">HAVALE</div>
@@ -78,19 +65,20 @@
                 <div class="t-btn" onclick="sec(this, 'Borç')">BORÇ</div>
             </div>
 
-            <input type="number" id="i-miktar" placeholder="Tutar ₺" style="text-align:center; font-size:20px; font-weight:bold;">
-            <input type="text" id="i-not" placeholder="Not (Müşteri adı vb.)">
+            <input type="number" id="i-miktar" placeholder="Tutar ₺">
+            <input type="text" id="i-not" placeholder="Not yazınız...">
             
-            <button onclick="kaydet()" class="btn-main">KAYDET</button>
+            <button onclick="kaydet()" class="btn-green">KAYDET</button>
         </div>
 
-        <!-- BORÇLAR (MINIMIZE) -->
-        <div class="section-title">AÇIK BORÇLAR</div>
+        <div class="section-title">AÇIK BORÇLAR (TÜMÜ)</div>
         <div id="borc-log" class="log-container"></div>
 
-        <!-- İŞLEMLER -->
         <div class="section-title">BUGÜNKÜ İŞLEMLER</div>
         <div id="islem-log" class="log-container"></div>
+
+        <div class="section-title">BUGÜNKÜ GİDERLER</div>
+        <div id="gider-log" class="log-container"></div>
     </div>
 </div>
 
@@ -99,22 +87,22 @@
     firebase.initializeApp(config);
     const db = firebase.firestore();
 
-    let user = "", role = "staff", seciliTip = "Nakit", unsubs = [];
+    let userRole = "staff", currentUserName = "", seciliTip = "Nakit", unsubs = [];
 
     async function giris() {
         const k = document.getElementById('k').value.trim().toLowerCase();
         const s = document.getElementById('s').value;
         const pDoc = await db.collection("ayarlar").doc("patron").get();
-        if(k === pDoc.data().ad && s === pDoc.data().sifre) start(k, "admin");
+        if(k === pDoc.data().ad && s === pDoc.data().sifre) basariliGiris(k, s, "admin");
         else {
             const snap = await db.collection("personeller").where("ad","==",k).where("sifre","==",s).get();
-            if(!snap.empty) start(k, "staff"); else alert("Giriş Başarısız!");
+            if(!snap.empty) basariliGiris(k, s, "staff"); else alert("Hatalı Giriş!");
         }
     }
 
-    function start(u, r) {
-        user = u.toUpperCase(); role = r;
-        localStorage.setItem('c_u', u); localStorage.setItem('c_s', document.getElementById('s').value);
+    function basariliGiris(u, p, role) {
+        localStorage.setItem('c_u', u); localStorage.setItem('c_p', p);
+        userRole = role; currentUserName = u.toUpperCase();
         document.getElementById('login-ekran').style.display='none';
         document.getElementById('panel').style.display='block';
         verileriGetir();
@@ -123,9 +111,9 @@
     function verileriGetir() {
         const sName = document.getElementById('i-sube').value;
         unsubs.forEach(u => u());
-        
+
         const u1 = db.collection("islemler").where("sube", "==", sName).onSnapshot(snap => {
-            let bHtml = "", iHtml = "", kasa = 0;
+            let kasa = 0, nakit = 0, kart = 0, log="", gLog="", bLog="";
             const docs = [];
             snap.forEach(d => docs.push({id: d.id, ...d.data()}));
             docs.sort((a,b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0));
@@ -135,39 +123,36 @@
                 const isBorc = d.tip === "Borç" && d.durum === "aktif";
                 const isToday = d.arsiv === false;
 
-                if (d.durum === "iptal" && !isToday) return;
+                if(d.durum === "iptal" && !isToday) return;
 
-                if (isToday && d.durum !== "iptal") {
-                    if (d.tip === "Nakit") kasa += m;
-                    else if (["Kart", "Havale"].includes(d.tip)) kasa += m;
-                    else if (d.tip === "Gider") kasa -= m;
+                if(isToday && d.durum !== "iptal") {
+                    if(d.tip === "Nakit") { kasa += m; nakit += m; }
+                    else if(d.tip === "Kart" || d.tip === "Havale") { kasa += m; kart += m; }
+                    else if(d.tip === "Gider") { kasa -= m; nakit -= m; }
                 }
 
-                // SİL BUTONU: Adminse veya bugünkü işlemse göster, yoksa gizle
-                let silBtn = (role === "admin" || isToday) ? `<button class="btn-sil" onclick="iptal('${d.id}')">SİL</button>` : "";
-
-                let satir = `
-                <div class="islem-item">
-                    <div class="item-info">
-                        <span class="item-amount">${m}₺</span>
-                        <span class="item-not">${d.not}</span>
-                        <span class="item-meta">${d.tip} | ${d.ekleyen}</span>
-                    </div>
-                    <div style="display:flex; align-items:center;">
-                        ${isBorc ? `
-                            <button class="btn-pay btn-nakit" onclick="ode('${d.id}',${m},'${d.not}','Nakit')">NAKİT</button>
-                            <button class="btn-pay btn-kart" onclick="ode('${d.id}',${m},'${d.not}','Kart')">KART</button>
-                        ` : silBtn}
-                    </div>
+                let silBtn = (userRole === "admin" || isToday) ? `<button onclick="iptal('${d.id}')" class="action-btn" style="background:var(--red); color:#fff; position:absolute; right:10px; top:10px;">SİL</button>` : "";
+                
+                let satir = `<div class="islem-item">
+                    ${silBtn}
+                    <div><b>${m}₺</b> - ${d.not}<br><small>${d.tip} | ${d.ekleyen}</small></div>
+                    ${isBorc ? `<div style="display:flex; gap:10px; margin-top:10px;">
+                        <button onclick="ode('${d.id}',${m},'${d.not}','Nakit')" class="action-btn" style="background:var(--n-green); color:#000; flex:1;">NAKİT ÖDE</button>
+                        <button onclick="ode('${d.id}',${m},'${d.not}','Kart')" class="action-btn" style="background:var(--n-blue); color:#000; flex:1;">KART ÖDE</button>
+                    </div>` : ""}
                 </div>`;
 
-                if (isBorc) bHtml += satir;
-                else if (isToday) iHtml += satir;
+                if(isBorc) bLog += satir;
+                else if(isToday) {
+                    if(d.tip === "Gider") gLog += satir; else log += satir;
+                }
             });
-
-            document.getElementById('borc-log').innerHTML = bHtml || "<div style='padding:15px; color:#333; font-size:12px;'>Açık borç bulunmuyor.</div>";
-            document.getElementById('islem-log').innerHTML = iHtml || "<div style='padding:15px; color:#333; font-size:12px;'>Bugün henüz işlem yok.</div>";
             document.getElementById('vT').innerText = kasa + "₺";
+            document.getElementById('vNakit').innerText = nakit + "₺";
+            document.getElementById('vKart').innerText = kart + "₺";
+            document.getElementById('islem-log').innerHTML = log || "<center style='padding:10px'>İşlem yok.</center>";
+            document.getElementById('gider-log').innerHTML = gLog || "<center style='padding:10px'>Gider yok.</center>";
+            document.getElementById('borc-log').innerHTML = bLog || "<center style='padding:10px'>Aktif borç yok.</center>";
         });
         unsubs.push(u1);
     }
@@ -178,25 +163,26 @@
             miktar: m, tip: seciliTip, sube: document.getElementById('i-sube').value,
             not: document.getElementById('i-not').value || seciliTip,
             tarih: firebase.firestore.FieldValue.serverTimestamp(),
-            durum: "aktif", arsiv: false, ekleyen: user
+            durum: "aktif", arsiv: false, ekleyen: currentUserName
         });
-        document.getElementById('i-miktar').value = ""; document.getElementById('i-not').value = "";
+        document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
     }
 
     async function ode(id, m, n, tip) {
-        if(!confirm(m + "₺ borç ödeniyor. Emin misin?")) return;
-        await db.collection("islemler").doc(id).update({durum:"iptal", arsiv:true});
+        if(!confirm("Ödeme alındı mı?")) return;
+        await db.collection("islemler").doc(id).update({durum:"iptal", arsiv: true});
         await db.collection("islemler").add({
             miktar: m, tip: tip, sube: document.getElementById('i-sube').value,
-            not: "[BORÇ KAPANDI] " + n, tarih: firebase.firestore.FieldValue.serverTimestamp(),
-            durum: "aktif", arsiv: false, ekleyen: user
+            not: "[ÖDENDİ] " + n, tarih: firebase.firestore.FieldValue.serverTimestamp(),
+            durum: "aktif", arsiv: false, ekleyen: currentUserName
         });
     }
 
-    function iptal(id) { if(confirm("Bu işlem silinecek?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
-    function sec(btn, val) { document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); seciliTip = val; }
-    
-    window.onload = () => { if(localStorage.getItem('c_u')) { document.getElementById('k').value=localStorage.getItem('c_u'); document.getElementById('s').value=localStorage.getItem('c_s'); giris(); } };
+    function iptal(id) { if(confirm("Siliyorum?")) db.collection("islemler").doc(id).update({durum:"iptal"}); }
+    function sec(btn, val) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=val; }
+    function cikisYap() { localStorage.clear(); location.reload(); }
+    setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
+    window.onload = () => { if(localStorage.getItem('c_u')) { document.getElementById('k').value=localStorage.getItem('c_u'); document.getElementById('s').value=localStorage.getItem('c_p'); giris(); } };
 </script>
 </body>
 </html>
