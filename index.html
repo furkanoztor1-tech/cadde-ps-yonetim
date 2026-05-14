@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v41.0 FIXED</title>
+    <title>CADDE PS | v42.0 REPAIR</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -46,7 +46,7 @@
     <div class="main-grid">
         <div class="glass">
             <h4 style="color:var(--n-green); margin:0 0 10px 0;">YENİ İŞLEM</h4>
-            <select id="i-sube" onchange="verileriGetir()">
+            <select id="i-sube">
                 <option value="CADDEPS 1">CADDEPS 1</option>
                 <option value="CADDEPS 2">CADDEPS 2</option>
             </select>
@@ -67,9 +67,9 @@
 
             <div class="glass" style="border:1px solid var(--gold); margin-top:10px;">
                 <p style="color:var(--gold); font-size:12px; margin:0; text-align:center;">VARDİYANIZ</p>
-                <div id="v-nakit" style="font-size:20px; text-align:center; margin-top:5px;">Nakit: 0₺</div>
-                <div id="v-kart" style="font-size:20px; text-align:center;">Kart: 0₺</div>
-                <button id="v-bitir-btn" onclick="vardiyaBitir()" class="action-btn" style="background:#222; color:var(--gold); margin-top:10px; font-size:11px; border:1px solid var(--gold);">VARDİYAYI TESLİM ET</button>
+                <div id="v-nakit" style="font-size:24px; text-align:center; color:var(--n-green); margin-top:5px;">0₺</div>
+                <div id="v-kart" style="font-size:24px; text-align:center; color:var(--n-blue);">0₺</div>
+                <button id="v-bitir-btn" onclick="vardiyaBitir()" class="action-btn" style="background:var(--gold); color:#000; margin-top:10px; font-size:11px;">VARDİYAYI TESLİM ET & WHATSAPP</button>
             </div>
         </div>
 
@@ -89,6 +89,7 @@
     </div>
 </div>
 
+<!-- RAPOR MODALI -->
 <div id="rapor-ekran" class="modal gizli">
     <div style="max-width:900px; margin:auto;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -105,12 +106,7 @@
                     <option value="CADDEPS 2">CADDEPS 2</option>
                 </select>
             </div>
-            <div><label>&nbsp;</label><button onclick="sorgula()" class="action-btn" style="background:var(--n-blue); color:#000;">FİLTRELE</button></div>
-        </div>
-        <div id="r-ozet" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:20px;">
-            <div class="glass" style="text-align:center;"><small>TOPLAM NAKİT</small><div id="ozet-n" style="color:var(--n-green);">0₺</div></div>
-            <div class="glass" style="text-align:center;"><small>TOPLAM KART</small><div id="ozet-k" style="color:var(--n-blue);">0₺</div></div>
-            <div class="glass" style="text-align:center;"><small>TOPLAM GİDER</small><div id="ozet-g" style="color:var(--red);">0₺</div></div>
+            <button onclick="sorgula()" class="action-btn" style="background:var(--n-blue); color:#000; margin-top:22px;">FİLTRELE</button>
         </div>
         <div id="r-liste" class="log-box" style="height:500px;"></div>
     </div>
@@ -121,8 +117,8 @@
     firebase.initializeApp(config);
     const db = firebase.firestore();
 
-    let userRole = "staff", currentUserName = "", unsubs = [], seciliTip = "Nakit";
-    const SESSION_KEY = 'cadde_v41_session';
+    const SESSION_KEY = 'cadde_v42_session';
+    let userRole = "staff", currentUserName = "", unsubs = [], seciliTip = "Nakit", activeVNakit = 0, activeVKart = 0, activeVGider = 0;
 
     (function init() {
         const session = localStorage.getItem(SESSION_KEY);
@@ -147,7 +143,7 @@
                 userRole="staff"; currentUserName=k;
                 localStorage.setItem(SESSION_KEY, JSON.stringify({role:"staff", name:k}));
                 panelBaslat();
-            } else alert("Hata!");
+            } else alert("Giriş Başarısız!");
         }
     }
 
@@ -165,48 +161,46 @@
     function verileriGetir() {
         const sube = document.getElementById('i-sube').value;
         unsubs.forEach(u => u()); unsubs = [];
-        const gunlukLimit = Date.now() - (24 * 60 * 60 * 1000);
+        const limit = Date.now() - (24 * 60 * 60 * 1000);
 
-        const u1 = db.collection("islemler").where("sube","==",sube).onSnapshot(snap => {
-            let gN=0, gK=0, vN=0, vK=0, logHtml="", docs=[];
-            snap.forEach(doc => docs.push({id: doc.id, ...doc.data()}));
-            docs.sort((a,b) => b.tarih - a.tarih);
-
-            docs.forEach(d => {
-                const m = parseFloat(d.miktar) || 0;
-                if(d.durum === "aktif") {
-                    if(d.tarih > gunlukLimit) {
-                        if(d.tip === "Nakit") gN += m;
-                        if(d.tip === "Kart") gK += m;
-                        if(d.tip === "Gider") gN -= m;
+        const u1 = db.collection("islemler").onSnapshot(snap => {
+            let gN=0, gK=0, vN=0, vK=0, vG=0, logHtml="", docs=[];
+            snap.forEach(doc => {
+                const d = doc.data();
+                if(d.sube === sube) {
+                    docs.push({id: doc.id, ...d});
+                    if(d.durum === "aktif") {
+                        if(d.tarih > limit) {
+                            if(d.tip === "Nakit") gN += d.miktar;
+                            if(d.tip === "Kart" || d.tip === "Havale") gK += d.miktar;
+                            if(d.tip === "Gider") gN -= d.miktar;
+                        }
+                        if(d.ekleyen === currentUserName && d.v_durum !== "teslim") {
+                            if(d.tip === "Nakit") vN += d.miktar;
+                            if(d.tip === "Kart" || d.tip === "Havale") vK += d.miktar;
+                            if(d.tip === "Gider") vG += d.miktar;
+                        }
                     }
-                    if(d.ekleyen === currentUserName && d.v_durum !== "teslim") {
-                        if(d.tip === "Nakit") vN += m;
-                        if(d.tip === "Kart") vK += m;
-                        if(d.tip === "Gider") vN -= m;
-                    }
-                }
-                if(docs.indexOf(d) < 20) {
-                    logHtml += `<div class="islem-satir">
-                        <span><b>${m}₺</b> - ${d.not} <small>(${d.ekleyen})</small></span>
-                        ${userRole==='admin' ? `<button onclick="tSil('${d.id}')" style="background:red; border:none; color:white; padding:3px 7px; border-radius:3px;">SİL</button>` : `<span>${d.tip}</span>`}
-                    </div>`;
                 }
             });
+            
+            activeVNakit = vN; activeVKart = vK; activeVGider = vG;
+            docs.sort((a,b) => b.tarih - a.tarih);
+            docs.slice(0,20).forEach(d => {
+                logHtml += `<div class="islem-satir"><span><b>${d.miktar}₺</b> - ${d.not} <small>(${d.ekleyen})</small></span><span>${d.tip}</span></div>`;
+            });
+
             document.getElementById('vT').innerText = (gN + gK + 200) + "₺";
             document.getElementById('v-nakit').innerText = `Nakit: ${vN}₺`;
             document.getElementById('v-kart').innerText = `Kart: ${vK}₺`;
             document.getElementById('islem-log').innerHTML = logHtml;
         });
-
+        
         const u2 = db.collection("islemler").where("sube","==",sube).where("tip","==","Borç").where("durum","==","aktif").onSnapshot(snap => {
             let bLog = "";
             snap.forEach(doc => {
                 const d = doc.data();
-                bLog += `<div style="background:#111; padding:10px; border-left:4px solid var(--red); margin-bottom:5px;">
-                    <b>${d.miktar}₺</b> - ${d.not}
-                    <div style="text-align:right;"><button onclick="borcOde('${doc.id}',${d.miktar},'${d.not}')" style="background:var(--n-green); border:none; padding:5px 10px;">ÖDE</button></div>
-                </div>`;
+                bLog += `<div style="background:#111; padding:10px; border-left:4px solid var(--red); margin-bottom:5px;"><b>${d.miktar}₺</b> - ${d.not} <button onclick="borcOde('${doc.id}',${d.miktar},'${d.not}')" style="float:right; background:var(--n-green); border:none; padding:5px;">ÖDE</button></div>`;
             });
             document.getElementById('borc-log').innerHTML = bLog;
         });
@@ -225,19 +219,22 @@
     }
 
     async function vardiyaBitir() {
-        if(!confirm("Vardiya teslim edilsin mi?")) return;
+        if(!confirm("Vardiyayı kapatıp WhatsApp bildirimi göndermek istiyor musunuz?")) return;
         const sube = document.getElementById('i-sube').value;
-        const btn = document.getElementById('v-bitir-btn');
-        btn.disabled = true;
+        const rapor = `🛑 VARDİYA RAPORU\n------------------\n👤 Personel: ${currentUserName.toUpperCase()}\n📍 Şube: ${sube}\n💵 Nakit: ${activeVNakit}₺\n💳 Kart: ${activeVKart}₺\n📉 Gider: ${activeVGider}₺\n💰 Toplam: ${activeVNakit + activeVKart}₺\n------------------`;
         
-        try {
-            const snap = await db.collection("islemler").where("sube","==",sube).where("ekleyen","==",currentUserName).where("v_durum","==","acik").get();
-            let batch = db.batch();
-            snap.forEach(doc => batch.update(doc.ref, { v_durum: "teslim" }));
-            await batch.commit();
-            alert("Vardiya sıfırlandı.");
-        } catch(e) { alert("Bir hata oldu!"); }
-        btn.disabled = false;
+        const snap = await db.collection("islemler").where("sube","==",sube).where("ekleyen","==",currentUserName).where("v_durum","==","acik").get();
+        let batch = db.batch();
+        snap.forEach(doc => batch.update(doc.ref, { v_durum: "teslim" }));
+        await batch.commit();
+
+        window.open(`https://wa.me/905300508821?text=${encodeURIComponent(rapor)}`, '_blank');
+        alert("Vardiya sıfırlandı ve rapor hazırlandı.");
+    }
+
+    async function borcOde(id, m, n) {
+        await db.collection("islemler").doc(id).update({durum:"odendi"});
+        await db.collection("islemler").add({ miktar: m, tip: "Nakit", sube: document.getElementById('i-sube').value, not: "[BORÇ ÖDEME] " + n, tarih: Date.now(), durum: "aktif", v_durum: "acik", ekleyen: currentUserName });
     }
 
     async function sorgula() {
@@ -245,29 +242,16 @@
         const bit = new Date(document.getElementById('r-bit').value).setHours(23,59,59,999);
         const sube = document.getElementById('r-sube').value;
         const snap = await db.collection("islemler").where("tarih", ">=", bas).where("tarih", "<=", bit).get();
-        let tN=0, tK=0, tG=0, html="";
+        let html = "";
         snap.forEach(doc => {
             const d = doc.data();
             if(sube === "HEPSİ" || d.sube === sube) {
-                if(d.durum === "aktif") {
-                    if(d.tip === "Nakit") tN += d.miktar; else if(d.tip === "Kart") tK += d.miktar; else if(d.tip === "Gider") tG += d.miktar;
-                }
                 html += `<div class="islem-satir"><span>${new Date(d.tarih).toLocaleDateString()} | ${d.ekleyen}</span><span>${d.miktar}₺ (${d.tip})</span></div>`;
             }
         });
-        document.getElementById('ozet-n').innerText = tN+"₺"; document.getElementById('ozet-k').innerText = tK+"₺"; document.getElementById('ozet-g').innerText = tG+"₺";
         document.getElementById('r-liste').innerHTML = html || "Kayıt yok.";
     }
 
-    async function borcOde(id, m, n) {
-        await db.collection("islemler").doc(id).update({durum:"odendi"});
-        await db.collection("islemler").add({
-            miktar: m, tip: "Nakit", sube: document.getElementById('i-sube').value,
-            not: "[BORÇ ÖDEME] " + n, tarih: Date.now(), durum: "aktif", v_durum: "acik", ekleyen: currentUserName
-        });
-    }
-
-    async function tSil(id) { if(confirm("Silinsin mi?")) await db.collection("islemler").doc(id).delete(); }
     function raporAc() { document.getElementById('rapor-ekran').classList.remove('gizli'); }
     function raporKapat() { document.getElementById('rapor-ekran').classList.add('gizli'); }
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); seciliTip = btn.getAttribute('data-val'); }
