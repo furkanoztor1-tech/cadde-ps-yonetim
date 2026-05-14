@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v19.9 ULTIMATE</title>
+    <title>CADDE PS | v19.9.1</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -27,8 +27,8 @@
 </head>
 <body>
 
-<!-- LOGIN EKRANI -->
-<div id="login-ekran" style="text-align:center; padding-top:100px;">
+<!-- LOGIN EKRANI (Başlangıçta gizli tutuyoruz ki oto-giriş sırasında sıçrama yapmasın) -->
+<div id="login-ekran" class="gizli" style="text-align:center; padding-top:100px;">
     <div style="width:320px; margin:auto; background:#0a0a0a; padding:40px; border-top:4px solid var(--n-blue); border-radius:10px;">
         <h2 style="font-family:'Orbitron'; margin-bottom:20px;">CADDE PS</h2>
         <input type="text" id="k" placeholder="Kullanıcı Adı">
@@ -41,12 +41,11 @@
 <div id="panel" class="gizli">
     <div class="top-bar">
         <div id="saat" style="font-family:'Orbitron'">00:00:00</div>
-        <div style="font-family:'Orbitron'; letter-spacing:2px;">CADDE <span style="color:var(--n-blue)">PS</span></div>
+        <div id="aktif-user-label" style="font-family:'Orbitron'; font-size:10px; color:var(--n-blue)">GİRİŞ YAPILDI</div>
         <button onclick="cikisYap()" style="background:none; border:1px solid var(--red); color:var(--red); padding:5px 15px; cursor:pointer; border-radius:5px;">ÇIKIŞ</button>
     </div>
 
     <div class="main-grid">
-        <!-- SOL: İŞLEM VE PERSONEL -->
         <div class="glass" style="padding:15px;">
             <h4 style="margin:0 0 10px 0; color:var(--n-green)">YENİ İŞLEM</h4>
             <select id="i-sube" onchange="verileriGetir()">
@@ -71,17 +70,15 @@
             </div>
         </div>
 
-        <!-- ORTA: KASA -->
         <div class="glass" style="padding:15px;">
             <div style="text-align:center; padding:15px; border:2px solid var(--n-green); border-radius:8px; margin-bottom:10px;">
                 <div id="kasa-detay" style="font-size:12px; color:#888;">Nakit: 0₺ | Kart: 0₺</div>
                 <div id="vT" style="font-size:36px; font-family:'Orbitron'; color:var(--n-green);">0₺</div>
-                <small id="z-bilgi" style="color:#444">Z-RAPORU (02:00 - 02:00)</small>
+                <small style="color:#444">Z-RAPORU (02:00 - 02:00)</small>
             </div>
             <div id="islem-log" class="log-box"></div>
         </div>
 
-        <!-- SAĞ: BORÇLAR -->
         <div class="glass" style="padding:15px;">
             <h4 style="margin:0 0 10px 0; color:var(--red)">AKTİF BORÇLAR</h4>
             <div id="borc-log" class="log-box"></div>
@@ -89,7 +86,7 @@
     </div>
 </div>
 
-<!-- PERSONEL DETAY MODALI (AYRI SAYFA GİBİ) -->
+<!-- MODALLAR (Personel Detay, Ekleme vb.) -->
 <div id="p-detay-modal" class="gizli" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:1000; padding:20px; box-sizing:border-box; overflow-y:auto;">
     <div style="max-width:800px; margin:auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--purple); padding-bottom:10px;">
@@ -101,7 +98,6 @@
     </div>
 </div>
 
-<!-- PERSONEL EKLEME MODALI -->
 <div id="p-ekle-modal" class="gizli" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1001; display:flex; align-items:center; justify-content:center;">
     <div style="width:300px; background:#0a0a0a; padding:30px; border:1px solid var(--n-blue);">
         <h3 style="color:var(--n-blue); margin-top:0;">PERSONEL EKLE</h3>
@@ -119,15 +115,18 @@
 
     let userRole = "staff", currentUserName = "", seciliTip = "Nakit", unsubs = [];
 
-    // OTO GİRİŞ KONTROLÜ
-    window.onload = () => {
-        const savedUser = localStorage.getItem('caddeUser');
-        if(savedUser) {
-            const u = JSON.parse(savedUser);
-            userRole = u.role; currentUserName = u.name;
-            panelBaslat();
+    // KRİTİK: OTURUM KONTROLÜ (Sayfa açılır açılmaz çalışır)
+    (function kontrolEt() {
+        const data = localStorage.getItem('cadde_session');
+        if (data) {
+            const session = JSON.parse(data);
+            userRole = session.role;
+            currentUserName = session.name;
+            setTimeout(() => panelBaslat(), 100); // Firebase'in hazır olması için minik bir bekleme
+        } else {
+            document.getElementById('login-ekran').classList.remove('gizli');
         }
-    };
+    })();
 
     async function giris() {
         const k = document.getElementById('k').value.trim().toLowerCase(), s = document.getElementById('s').value;
@@ -135,30 +134,27 @@
         
         if(k === patronDoc.data().ad && s === patronDoc.data().sifre) {
             userRole = "admin"; currentUserName = k;
-            oturumKaydet("admin", k);
+            localStorage.setItem('cadde_session', JSON.stringify({role: "admin", name: k}));
             panelBaslat();
         } else {
             const pSnap = await db.collection("personeller").where("ad","==",k).where("sifre","==",s).get();
             if(!pSnap.empty) {
                 userRole="staff"; currentUserName=k;
-                oturumKaydet("staff", k);
+                localStorage.setItem('cadde_session', JSON.stringify({role: "staff", name: k}));
                 panelBaslat();
             } else alert("Hatalı Giriş!");
         }
     }
 
-    function oturumKaydet(role, name) {
-        localStorage.setItem('caddeUser', JSON.stringify({role, name}));
-    }
-
     function cikisYap() {
-        localStorage.removeItem('caddeUser');
+        localStorage.removeItem('cadde_session');
         location.reload();
     }
 
     function panelBaslat() {
         document.getElementById('login-ekran').classList.add('gizli');
         document.getElementById('panel').classList.remove('gizli');
+        document.getElementById('aktif-user-label').innerText = currentUserName.toUpperCase() + " OTURUMU";
         if(userRole === "admin") {
             document.getElementById('admin-panel').classList.remove('gizli');
             personelleriYukle();
@@ -166,7 +162,6 @@
         verileriGetir();
     }
 
-    // 2-2 ARASI Z RAPORU MANTIĞI
     function getZTime() {
         let simdi = new Date();
         let bas = new Date();
@@ -218,7 +213,6 @@
         document.getElementById('i-miktar').value=""; document.getElementById('i-not').value="";
     }
 
-    // PERSONEL TAKİP FONKSİYONLARI
     async function personelleriYukle() {
         const snap = await db.collection("personeller").get();
         let h = "";
@@ -235,8 +229,6 @@
     async function personelDetayGetir(pAdi) {
         document.getElementById('p-detay-modal').classList.remove('gizli');
         document.getElementById('detay-p-adi').innerText = pAdi.toUpperCase() + " İŞLEMLERİ";
-        
-        // Bu personelin son 100 işlemini getir
         const snap = await db.collection("islemler").where("ekleyen","==",pAdi).orderBy("tarih","desc").limit(100).get();
         let h = "", nakit=0, kart=0;
         snap.forEach(doc => {
@@ -247,34 +239,23 @@
                 <b>${d.miktar}₺</b> - ${d.not || d.tip} <small style="float:right">${d.tarih.toDate().toLocaleDateString()}</small>
             </div>`;
         });
-        document.getElementById('detay-istatistik').innerHTML = `
-            <div class="glass" style="text-align:center">Nakit<br>${nakit}₺</div>
-            <div class="glass" style="text-align:center">Kart<br>${kart}₺</div>
-            <div class="glass" style="text-align:center">Toplam<br>${nakit+kart}₺</div>
-        `;
+        document.getElementById('detay-istatistik').innerHTML = `<div class="glass" style="text-align:center">Nakit<br>${nakit}₺</div><div class="glass" style="text-align:center">Kart<br>${kart}₺</div><div class="glass" style="text-align:center">Toplam<br>${nakit+kart}₺</div>`;
         document.getElementById('detay-islem-listesi').innerHTML = h || "İşlem bulunamadı.";
     }
 
     function pEkleModali() { document.getElementById('p-ekle-modal').classList.remove('gizli'); }
     function modalKapat(id) { document.getElementById(id).classList.add('gizli'); }
-
     async function pKaydet() {
         const ad = document.getElementById('yeni-p-ad').value.trim().toLowerCase();
         const sifre = document.getElementById('yeni-p-sifre').value.trim();
-        if(ad && sifre) {
-            await db.collection("personeller").add({ ad, sifre });
-            modalKapat('p-ekle-modal');
-            personelleriYukle();
-        }
+        if(ad && sifre) { await db.collection("personeller").add({ ad, sifre }); modalKapat('p-ekle-modal'); personelleriYukle(); }
     }
-
-    async function pSil(id) { if(confirm("Personeli silmek istediğine emin misin?")) { await db.collection("personeller").doc(id).delete(); personelleriYukle(); } }
+    async function pSil(id) { if(confirm("Personeli sil?")) { await db.collection("personeller").doc(id).delete(); personelleriYukle(); } }
     async function tSil(id) { if(confirm("Siliniyor?")) await db.collection("islemler").doc(id).delete(); }
     async function bTahsil(id, m, n, t) {
         await db.collection("islemler").doc(id).update({ durum: "odendi" });
         await db.collection("islemler").add({ miktar:m, tip:t, sube:document.getElementById('i-sube').value, not:"BORÇ ÖDENDİ: "+n, tarih:new Date(), durum:"aktif", ekleyen:currentUserName });
     }
-
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); seciliTip=btn.getAttribute('data-val'); }
     setInterval(()=> { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR'); }, 1000);
 </script>
