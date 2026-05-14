@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v17.9 FULL+BORÇ</title>
+    <title>CADDE PS | v17.9 FIX</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -54,7 +54,7 @@
 
     <div class="main-grid">
         <div class="glass">
-            <h4 style="color:var(--n-green); margin:0 0 10px 0;">YENİ İŞLEM</h4>
+            <h4 style="color:var(--n-green); margin:0 0 10px 0;">YENİ İİŞLEM</h4>
             <select id="i-sube" onchange="verileriGetir()" style="width:100%; padding:10px; background:#000; color:#fff; border:2px solid var(--n-blue); border-radius:8px; margin-bottom:10px;">
                 <option value="CADDEPS 1">CADDEPS 1</option>
                 <option value="CADDEPS 2">CADDEPS 2</option>
@@ -85,7 +85,7 @@
         </div>
 
         <div class="glass">
-            <h4 style="color:var(--n-purple); margin:0 0 10px 0;">TÜM BORÇLAR (ESKİ + YENİ)</h4>
+            <h4 style="color:var(--n-purple); margin:0 0 10px 0;">TÜM BORÇLAR (ALACAKLAR)</h4>
             <div id="borc-log" class="log-box" style="margin-bottom:15px; max-height:250px;"></div>
             <h4 style="color:var(--red); margin:0 0 10px 0;">GÜNLÜK GİDERLER</h4>
             <div id="gider-log" class="log-box" style="max-height:150px;"></div>
@@ -111,13 +111,32 @@
 
     let userRole = "staff", currentUserName = "", seciliTip = "Nakit", unsubs = [];
 
+    // OTOMATİK GİRİŞ (BENİ HATIRLA)
+    window.onload = function() {
+        const kaydedilmisK = localStorage.getItem("caddeUser");
+        const kaydedilmisS = localStorage.getItem("caddePass");
+        if(kaydedilmisK && kaydedilmisS) {
+            document.getElementById('k').value = kaydedilmisK;
+            document.getElementById('s').value = kaydedilmisS;
+            giris();
+        }
+    };
+
     async function giris() {
         const k = document.getElementById('k').value.trim().toLowerCase(), s = document.getElementById('s').value;
         const p = await db.collection("ayarlar").doc("patron").get();
-        if(k === p.data().ad && s === p.data().sifre) { basariliGiris(k, s, "admin"); }
+        if(k === p.data().ad && s === p.data().sifre) { 
+            localStorage.setItem("caddeUser", k);
+            localStorage.setItem("caddePass", s);
+            basariliGiris(k, s, "admin"); 
+        }
         else {
             db.collection("personeller").where("ad","==",k).where("sifre","==",s).get().then(snap => {
-                if(!snap.empty) basariliGiris(k, s, "staff");
+                if(!snap.empty) {
+                    localStorage.setItem("caddeUser", k);
+                    localStorage.setItem("caddePass", s);
+                    basariliGiris(k, s, "staff");
+                }
                 else alert("Giriş Hatalı!");
             });
         }
@@ -131,7 +150,11 @@
         verileriGetir();
     }
 
-    function cikisYap() { location.reload(); }
+    function cikisYap() { 
+        localStorage.removeItem("caddeUser");
+        localStorage.removeItem("caddePass");
+        location.reload(); 
+    }
 
     function verileriGetir() {
         const sName = document.getElementById('i-sube').value;
@@ -141,11 +164,10 @@
         if (simdi.getHours() < 2) { bas.setDate(simdi.getDate() - 1); }
         bas.setHours(2, 0, 0, 0); 
 
-        // 1. KASA VE GİDER TAKİBİ (SADECE BUGÜN)
+        // KASA: Sadece bugünü gösterir
         const u1 = db.collection("islemler")
             .where("sube", "==", sName)
             .where("tarih", ">=", bas)
-            .orderBy("tarih", "desc")
             .onSnapshot(snap => {
                 let kasaToplam = 0, log="", gLog="";
                 snap.forEach(doc => {
@@ -166,7 +188,7 @@
                 document.getElementById('gider-log').innerHTML = gLog;
             });
 
-        // 2. TÜM BORÇLAR (TARİH SINIRI OLMADAN - ESKİLERİ GETİRİR)
+        // BORÇLAR: Tüm zamanların aktif borçlarını getirir (Garanti Filtre)
         const u2 = db.collection("islemler")
             .where("sube", "==", sName)
             .where("tip", "==", "Borç")
@@ -180,7 +202,7 @@
                         <button onclick="borcode('${doc.id}', ${d.miktar}, '${d.not}')" style="background:var(--n-green); border:none; padding:5px 10px; border-radius:4px; font-weight:bold; color:#000; cursor:pointer;">ÖDE</button>
                     </div>`;
                 });
-                document.getElementById('borc-log').innerHTML = bLog;
+                document.getElementById('borc-log').innerHTML = bLog || "<div style='color:#555; padding:10px;'>Aktif borç bulunamadı.</div>";
             });
 
         unsubs.push(u1, u2);
@@ -221,7 +243,7 @@
             sube: sName, nakit: n, kart: k, havale: h, gider: g, 
             net: (n+k+h)-g, tarih: new Date(), tarih_key: new Date().toLocaleDateString('tr-TR') 
         });
-        alert("Z Raporu Başarıyla Kaydedildi!");
+        alert("Z Raporu Kaydedildi!");
     }
 
     async function arsivGoster() {
