@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v20.6 FINAL</title>
+    <title>CADDE PS | v20.6 STABLE</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -165,6 +165,7 @@
 
     function verileriGetir() {
         const sube = document.getElementById('i-sube').value;
+        
         unsubs.forEach(u => { if(typeof u === 'function') u(); });
         unsubs = []; 
         
@@ -177,14 +178,14 @@
             snap.forEach(doc => {
                 const d = doc.data();
                 if(d.durum === "aktif") {
-                    if(d.tip==="Nakit") nT += d.miktar;
-                    if(d.tip==="Kart") kT += d.miktar;
-                    if(d.tip==="Gider") nT -= d.miktar; 
+                    if(d.tip === "Nakit") nT += d.miktar;
+                    if(d.tip === "Kart") kT += d.miktar;
+                    if(d.tip === "Gider") nT -= d.miktar; 
                     
                     if(d.ekleyen === currentUserName) {
-                        if(d.tip==="Nakit") vN += d.miktar;
-                        if(d.tip==="Kart") vK += d.miktar;
-                        if(d.tip==="Gider") vN -= d.miktar;
+                        if(d.tip === "Nakit") vN += d.miktar;
+                        if(d.tip === "Kart") vK += d.miktar;
+                        if(d.tip === "Gider") vN -= d.miktar;
                     }
                 }
                 log += `<div style="padding:10px; border-bottom:1px solid #111; display:flex; justify-content:space-between;">
@@ -230,25 +231,34 @@
 
     async function vardiyaBitir() {
         const sube = document.getElementById('i-sube').value;
+        
         if(confirm(`Dükkanı Kapatıyorsunuz.\nSizin Topladığınız Nakit: ${pNakit}₺\nSizin Topladığınız Kart: ${pKart}₺\n(200₺ Kasada bırakılacaktır.)\nOnaylıyor musunuz?`)) {
+            
             try {
-                let simdi = new Date();
-                let bas = new Date(simdi); if(bas.getHours() < 2) bas.setDate(bas.getDate()-1); bas.setHours(2,0,0,0);
-                let bit = new Date(bas); bit.setDate(bit.getDate()+1);
+                let bas = new Date();
+                bas.setHours(0,0,0,0);
+                
+                let bit = new Date();
+                bit.setHours(23,59,59,999);
 
                 const snap = await db.collection("islemler")
                     .where("sube", "==", sube)
-                    .where("tarih", ">=", bas)
-                    .where("tarih", "<", bit)
                     .get();
 
                 let islemlerDizisi = [];
                 snap.forEach(doc => {
                     let data = doc.data();
-                    data.id = doc.id;
-                    islemlerDizisi.push(data);
+                    if(data.tarih) {
+                        const t = data.tarih.toDate ? data.tarih.toDate() : new Date(data.tarih);
+                        if(t >= bas && t <= bit && data.durum === "aktif") {
+                            data.id = doc.id;
+                            data.jsTarih = t;
+                            islemlerDizisi.push(data);
+                        }
+                    }
                 });
-                islemlerDizisi.sort((a, b) => a.tarih - b.tarih);
+                
+                islemlerDizisi.sort((a, b) => a.jsTarih - b.jsTarih);
 
                 let wpMesaj = `📊 *CADDE PS - GÜN SONU RAPORU*\n`;
                 wpMesaj += `🏪 *Şube:* ${sube}\n`;
@@ -266,32 +276,34 @@
                 
                 let sayac = 1;
                 islemlerDizisi.forEach(d => {
-                    if(d.durum === "aktif") {
-                        let islemSaati = "00:00";
-                        if(d.tarih) {
-                            const t = d.tarih.toDate ? d.tarih.toDate() : new Date(d.tarih);
-                            islemSaati = t.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-                        }
-                        wpMesaj += `🕒 ${islemSaati} -> *${d.miktar}₺* - ${d.not || d.tip} (${d.ekleyen})\n`;
-                        sayac++;
-                    }
+                    let islemSaati = d.jsTarih.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    wpMesaj += `🕒 ${islemSaati} -> *${d.miktar}₺* - ${d.not || d.tip} (${d.ekleyen})\n`;
+                    sayac++;
                 });
                 
                 if(sayac === 1) wpMesaj += `_Bugün hiç işlem kaydı girilmedi._\n`;
                 wpMesaj += `\n------------------------------------------\n`;
                 wpMesaj += `🔐 _Bu rapor sistem tarafından otomatik üretilmiştir._`;
 
-                await db.collection("islemler").add({ miktar: 0, tip: "BİLGİ", not: `KAPANIŞ: ${pNakit}₺ teslim, ${SABIT_KASA}₺ kasada kaldı.`, tarih: new Date(), ekleyen: currentUserName, sube: sube, durum: "info" });
+                await db.collection("islemler").add({ 
+                    miktar: 0, 
+                    tip: "BİLGİ", 
+                    not: `KAPANIŞ: ${pNakit}₺ teslim, ${SABIT_KASA}₺ kasada kaldı.`, 
+                    tarih: new Date(), 
+                    ekleyen: currentUserName, 
+                    sube: sube, 
+                    durum: "info" 
+                });
 
                 const patronNo = "905393774554"; 
                 const wpUrl = `https://api.whatsapp.com/send?phone=${patronNo}&text=${encodeURIComponent(wpMesaj)}`;
                 
                 window.open(wpUrl, '_blank');
                 cikisYap();
+
             } catch (hata) {
-                console.error("Rapor hatası:", hata);
-                alert("Rapor hazırlanırken hata oluştu.");
-                cikisYap();
+                console.error("Rapor hatası detayları:", hata);
+                alert("Rapor hazırlanırken hata oluştu: " + hata.message);
             }
         }
     }
