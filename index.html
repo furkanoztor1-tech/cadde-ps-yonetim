@@ -1,9 +1,13 @@
-// --- DÜZELTİLMİŞ VERİ GETİRME FONKSİYONU ---
+// --- TÜM HATALARI GİDERİLMİŞ KARARLI VERSİYON ---
+
 function verileriGetir() {
     const sName = document.getElementById('i-sube').value;
-    unsubs.forEach(u => u());
-    
-    // Filtreleme: Sadece ilgili şubedeki, iptal edilmemiş ve arşivlenmemiş her şeyi getirir
+    // Eski abonelikleri temizle (Çakışmayı önler)
+    if(unsubs && unsubs.length > 0) {
+        unsubs.forEach(u => u());
+        unsubs = [];
+    }
+
     const u1 = db.collection("islemler")
         .where("sube", "==", sName)
         .where("durum", "==", "aktif")
@@ -11,24 +15,28 @@ function verileriGetir() {
         .onSnapshot(snap => {
             let kasa = 0, log = "", gLog = "", bLog = "", list = [];
             
-            snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+            snap.forEach(doc => {
+                list.push({ id: doc.id, ...doc.data() });
+            });
             
-            // Tarihe göre sırala (En yeni en üstte)
+            // Tarihe göre sırala
             list.sort((a, b) => (b.tarih?.seconds || 0) - (a.tarih?.seconds || 0));
             
             list.forEach(d => {
-                let m = Number(d.miktar);
-                // Kasa hesabı: Borçlar kasaya girmez, giderler kasadan düşer
+                let m = Number(d.miktar) || 0;
+                // Kasa Hesabı
                 if (d.tip !== "Borç" && d.tip !== "Gider") kasa += m;
                 if (d.tip === "Gider") kasa -= m;
                 
                 let fZaman = "--:--";
                 if (d.tarih) {
-                    const dateObj = new Date(d.tarih.seconds * 1000);
-                    fZaman = dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    try {
+                        const dateObj = new Date(d.tarih.seconds * 1000);
+                        fZaman = dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+                    } catch(e) { fZaman = "--:--"; }
                 }
 
-                // ADMIN HER ŞEYİ SİLEBİLİR, PERSONEL SADECE KENDİSİNİ
+                // Admin her şeyi, Personel sadece kendi eklediğini silebilir
                 let silBtn = (userRole === "admin" || d.ekleyen === currentUserName) 
                     ? `<button onclick="iptal('${d.id}')" style="float:right; background:red; border:none; color:#fff; border-radius:3px; padding:2px 6px; font-size:10px; cursor:pointer; margin-left:5px;">SİL</button>` 
                     : "";
@@ -38,7 +46,7 @@ function verileriGetir() {
                 let item = `<div style="padding:10px; border-bottom:1px solid #222;">
                                 <span class="personel-tag">${d.ekleyen || "???"}</span>
                                 <small style="color:#666; font-size:10px;">${fZaman}</small><br>
-                                <b>${d.miktar}₺</b> - ${d.not} ${silBtn} ${tahsilBtn}
+                                <b>${m}₺</b> - ${d.not || ""} ${silBtn} ${tahsilBtn}
                             </div>`;
                 
                 if (d.tip === "Gider") gLog += item; 
@@ -47,63 +55,73 @@ function verileriGetir() {
             });
             
             document.getElementById('vT').innerText = kasa + "₺";
-            document.getElementById('islem-log').innerHTML = log; 
-            document.getElementById('gider-log').innerHTML = gLog; 
-            document.getElementById('borc-log').innerHTML = bLog;
+            document.getElementById('islem-log').innerHTML = log || "<div style='padding:10px; color:#444;'>İşlem yok.</div>"; 
+            document.getElementById('gider-log').innerHTML = gLog || "<div style='padding:10px; color:#444;'>Gider yok.</div>"; 
+            document.getElementById('borc-log').innerHTML = bLog || "<div style='padding:10px; color:#444;'>Borç yok.</div>";
+        }, err => {
+            console.error("Veri çekme hatası:", err);
         });
     unsubs.push(u1);
 }
 
-// --- DÜZELTİLMİŞ GÜNÜ KAPAT (Z RAPORU) ---
 async function gunuKapat() {
     const sName = document.getElementById('i-sube').value;
-    if (!confirm(sName + " için Z Raporu alınıp kasa sıfırlansın mı?")) return;
+    if (!confirm(sName + " Z Raporu alınıp kasa sıfırlansın mı?")) return;
 
-    const snap = await db.collection("islemler")
-        .where("sube", "==", sName)
-        .where("durum", "==", "aktif")
-        .where("arsiv", "==", false)
-        .get();
+    try {
+        const snap = await db.collection("islemler")
+            .where("sube", "==", sName)
+            .where("durum", "==", "aktif")
+            .where("arsiv", "==", false)
+            .get();
 
-    if (snap.empty) return alert("Kapatılacak kayıt bulunamadı!");
-
-    let n = 0, k = 0, h = 0, g = 0, b = 0, ids_to_archive = [];
-
-    snap.forEach(doc => {
-        const d = doc.data();
-        if (d.tip === "Nakit") n += d.miktar;
-        else if (d.tip === "Kart") k += d.miktar;
-        else if (d.tip === "Havale") h += d.multiplier || d.miktar; // Havale kontrolü
-        else if (d.tip === "Gider") g += d.miktar;
-        else if (d.tip === "Borç") b += d.miktar;
-
-        // Borçlar hariç her şeyi arşivle (Ekranda sadece borçlar kalsın)
-        if (d.tip !== "Borç") {
-            ids_to_archive.push(doc.id);
+        if (snap.empty) {
+            alert("Kapatılacak kayıt bulunamadı!");
+            return;
         }
-    });
 
-    // Z Raporunu Kaydet
-    await db.collection("z_raporlari").add({
-        tarih: new Date().toLocaleString('tr-TR'),
-        sube: sName,
-        kapatan: currentUserName,
-        nakit: n,
-        kart: k,
-        havale: h,
-        gider: g,
-        borc: b,
-        net: (n + k + h) - g,
-        ts: new Date() // Sıralama için teknik tarih
-    });
+        let n = 0, k = 0, h = 0, g = 0, b = 0, ids_to_archive = [];
 
-    // Toplu Güncelleme (Batch) - Verileri Arşive Al
-    const batch = db.batch();
-    ids_to_archive.forEach(id => {
-        batch.update(db.collection("islemler").doc(id), { arsiv: true });
-    });
-    await batch.commit();
+        snap.forEach(doc => {
+            const d = doc.data();
+            const m = Number(d.miktar) || 0;
+            if (d.tip === "Nakit") n += m;
+            else if (d.tip === "Kart") k += m;
+            else if (d.tip === "Havale") h += m;
+            else if (d.tip === "Gider") g += m;
+            else if (d.tip === "Borç") b += m;
 
-    alert("Z Raporu Başarıyla Alındı. Kasa Sıfırlandı!");
-    location.reload(); // Sayfayı yenileyerek temiz başlangıç yap
+            // Borçlar hariç her şeyi arşive işaretle
+            if (d.tip !== "Borç") {
+                ids_to_archive.push(doc.id);
+            }
+        });
+
+        // Z Raporunu Kaydet
+        await db.collection("z_raporlari").add({
+            tarih: new Date().toLocaleString('tr-TR'),
+            sube: sName,
+            kapatan: currentUserName,
+            nakit: n,
+            kart: k,
+            havale: h,
+            gider: g,
+            borc: b,
+            net: (n + k + h) - g,
+            ts: new Date()
+        });
+
+        // Toplu Arşivleme
+        const batch = db.batch();
+        ids_to_archive.forEach(id => {
+            batch.update(db.collection("islemler").doc(id), { arsiv: true });
+        });
+        await batch.commit();
+
+        alert("Z Raporu Başarıyla Alındı!");
+        location.reload();
+    } catch (error) {
+        console.error("Hata:", error);
+        alert("İşlem sırasında bir hata oluştu!");
+    }
 }
