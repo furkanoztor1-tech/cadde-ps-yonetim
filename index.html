@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v50.0 STABLE</title>
+    <title>CADDE PS | v50.2 STABLE</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -67,7 +67,6 @@
                 <button onclick="raporAc()" class="action-btn" style="background:var(--gold); color:#000;">📊 PATRON PANELİ</button>
             </div>
 
-            <!-- VARDİYA ALANI SADECE PERSONEL İÇİN KRİTİK, PATRONDA KAFA KARIŞTIRMASIN DİYE KONTROLLÜ -->
             <div id="personel-vardiya-box" class="glass" style="border:1px solid var(--gold); margin-top:10px; text-align:center;">
                 <p style="color:var(--gold); font-size:11px; margin:0;">AKTİF VARDİYANIZ</p>
                 <div id="v-nakit" style="font-size:26px; color:var(--n-green); font-weight:bold;">0₺</div>
@@ -114,17 +113,12 @@
     const db = firebase.firestore();
 
     const SESSION_KEY = 'cadde_v50_session';
-    let userRole = "staff", currentUserName = "", unsubs = [], seciliTip = "Nakit", pTel = "";
+    const PATRON_TEL = "905393774554"; 
+    let userRole = "staff", currentUserName = "", unsubs = [], seciliTip = "Nakit";
     let vn = 0, vk = 0, vg = 0;
 
     (function init() {
         const session = localStorage.getItem(SESSION_KEY);
-        db.collection("ayarlar").doc("patron").onSnapshot(doc => {
-            if(doc.exists) {
-                let num = doc.data().tel.replace(/\D/g,'');
-                pTel = num.startsWith('90') ? num : '90' + num;
-            }
-        });
         db.collection("personeller").get().then(snap => {
             const sel = document.getElementById('r-personel');
             snap.forEach(doc => { sel.innerHTML += `<option value="${doc.data().ad.toLowerCase()}">${doc.data().ad.toUpperCase()}</option>`; });
@@ -161,8 +155,6 @@
         if(userRole === "admin") {
             document.getElementById('admin-area').classList.remove('gizli');
             document.getElementById('admin-kasa').classList.remove('gizli');
-            // Patron kendi vardiyasını teslim etmek zorunda değil, tüm kasayı görüyor.
-            // İstersen burayı "gizli" yapabiliriz ama senin kendi işlemlerini görmen için açık bıraktım.
         }
         verileriGetir();
     }
@@ -183,7 +175,6 @@
                         if(d.tip === "Nakit" || d.tip === "Kart" || d.tip === "Havale") t24 += d.miktar;
                         if(d.tip === "Gider") t24 -= d.miktar;
                     }
-                    // BURASI ÖNEMLİ: Sadece giriş yapan kişinin o anki açık vardiyasını toplar.
                     if(d.ekleyen === currentUserName && d.v_durum === "acik") {
                         if(d.tip === "Nakit") tvn += d.miktar;
                         if(d.tip === "Kart" || d.tip === "Havale") tvk += d.miktar;
@@ -225,14 +216,29 @@
     }
 
     async function vardiyaBitir() {
+        if(vn === 0 && vk === 0 && vg === 0) { alert("Aktif işleminiz bulunmuyor."); return; }
         if(!confirm("Vardiyayı Kapatıp Rapor Gönderilsin mi?")) return;
+        
         const sube = document.getElementById('i-sube').value;
-        const raporText = `🏁 VARDİYA RAPORU\n👤: ${currentUserName.toUpperCase()}\n📍: ${sube}\n💵 Nakit: ${vn}₺\n💳 Kart: ${vk}₺\n📉 Gider: ${vg}₺\n💰 Net Ciro: ${vn+vk}₺`;
-        const snap = await db.collection("islemler").where("sube","==",sube).where("ekleyen","==",currentUserName).where("v_durum","==","acik").get();
-        const batch = db.batch();
-        snap.forEach(doc => batch.update(doc.ref, {v_durum: "teslim"}));
-        await batch.commit();
-        if(pTel) window.open(`https://api.whatsapp.com/send?phone=${pTel}&text=${encodeURIComponent(raporText)}`, '_blank');
+        const raporText = `*🏁 VARDİYA RAPORU*%0A` +
+                          `*👤 Personel:* ${currentUserName.toUpperCase()}%0A` +
+                          `*📍 Şube:* ${sube}%0A` +
+                          `──────────────%0A` +
+                          `*💵 Nakit:* ${vn}₺%0A` +
+                          `*💳 Kart/Havale:* ${vk}₺%0A` +
+                          `*📉 Gider:* ${vg}₺%0A` +
+                          `*💰 Toplam Ciro:* ${vn+vk}₺%0A` +
+                          `──────────────%0A` +
+                          `*⏰ Saat:* ${new Date().toLocaleTimeString('tr-TR')}`;
+
+        try {
+            const snap = await db.collection("islemler").where("sube","==",sube).where("ekleyen","==",currentUserName).where("v_durum","==","acik").get();
+            const batch = db.batch();
+            snap.forEach(doc => batch.update(doc.ref, {v_durum: "teslim"}));
+            await batch.commit();
+
+            window.location.href = `https://api.whatsapp.com/send?phone=${PATRON_TEL}&text=${raporText}`;
+        } catch(e) { alert("Hata: " + e.message); }
     }
 
     async function sorgula() {
