@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CADDE PS | v50.3 STABLE</title>
+    <title>CADDE PS | v50.4</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
@@ -16,17 +16,18 @@
         .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 10px; }
         .t-btn { padding: 12px 5px; border: 1px solid #333; background: #000; color: #fff; cursor: pointer; font-size: 11px; font-family: 'Orbitron'; }
         .t-btn.active { border-color: var(--n-blue); color: var(--n-blue); background: rgba(0,210,255,0.1); }
-        .log-box { height: 450px; overflow-y: auto; background: #000; padding: 10px; border: 1px solid #111; border-radius: 5px; margin-top:10px; }
+        .log-box { height: 400px; overflow-y: auto; background: #000; padding: 10px; border: 1px solid #111; border-radius: 5px; margin-top:10px; }
         input, select { width: 100%; padding: 15px; margin-bottom: 10px; background: #000; border: 1px solid #333; color: #fff; box-sizing: border-box; border-radius: 5px; font-size: 16px; }
         .action-btn { width: 100%; padding: 15px; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-family: 'Orbitron'; font-size: 13px; margin-bottom: 10px; }
         .gizli { display: none !important; }
         .islem-satir { padding: 10px; border-bottom: 1px solid #111; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; padding: 20px; box-sizing: border-box; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         @media (max-width: 1024px) { .main-grid { display: flex; flex-direction: column; } }
     </style>
 </head>
 <body>
 
+<!-- GİRİŞ EKRANI -->
 <div id="login-ekran" class="gizli" style="text-align:center; padding-top:80px;">
     <div style="width:300px; margin:auto; background:#0a0a0a; padding:30px; border-top:4px solid var(--n-blue); border-radius:10px;">
         <h2 style="font-family:'Orbitron';">CADDE PS</h2>
@@ -36,6 +37,7 @@
     </div>
 </div>
 
+<!-- ANA PANEL -->
 <div id="panel" class="gizli">
     <div class="top-bar">
         <div id="saat" style="font-family:'Orbitron'; font-size:14px;">00:00</div>
@@ -44,6 +46,7 @@
     </div>
 
     <div class="main-grid">
+        <!-- SOL: İŞLEM EKLEME -->
         <div class="glass">
             <h4 style="color:var(--n-green); margin:0 0 10px 0;">YENİ İŞLEM</h4>
             <select id="i-sube" onchange="verileriGetir()">
@@ -63,7 +66,7 @@
 
             <div id="admin-area" class="gizli">
                 <button onclick="raporAc()" class="action-btn" style="background:var(--gold); color:#000;">📊 PATRON PANELİ</button>
-                <button onclick="kasaSifirla()" class="action-btn" style="background:var(--red); color:#fff; font-size:10px;">KASAYI SIFIRLA (YENİ GÜNE BAŞLA)</button>
+                <button onclick="kasaSifirla()" class="action-btn" style="background:var(--red); color:#fff; font-size:10px;">KASAYI SIFIRLA (ARŞİVLE)</button>
             </div>
 
             <div id="personel-vardiya-box" class="glass" style="border:1px solid var(--gold); margin-top:10px; text-align:center;">
@@ -74,15 +77,17 @@
             </div>
         </div>
 
+        <!-- ORTA: LOG VE TOPLAM KASA -->
         <div class="glass">
             <div id="admin-kasa" class="gizli" style="text-align:center; border:2px solid var(--n-green); padding:10px; border-radius:10px; margin-bottom:10px;">
-                <div style="font-size:11px; color:var(--n-green);">GÜNCEL KASA (+200₺)</div>
+                <div style="font-size:11px; color:var(--n-green);">GÜNCEL AKTİF KASA (+200₺)</div>
                 <div id="vT" style="font-size:32px; font-family:'Orbitron'; color:#fff;">200₺</div>
             </div>
             <h4 style="color:var(--n-blue); font-size:12px; margin:0;">SON İŞLEMLER</h4>
             <div id="islem-log" class="log-box"></div>
         </div>
 
+        <!-- SAĞ: BORÇLAR -->
         <div class="glass">
             <h4 style="color:var(--red); margin:0 0 10px 0;">BORÇLAR</h4>
             <div id="borc-log" class="log-box"></div>
@@ -90,15 +95,31 @@
     </div>
 </div>
 
+<!-- PATRON PANELİ (MODAL) -->
 <div id="rapor-ekran" class="modal gizli">
-    <!-- Rapor içeriği bir öncekiyle aynı kalacak -->
-    <div style="max-width:900px; margin:auto; background:#0a0a0a; padding:20px; border:1px solid #333; border-radius:10px; height:95vh; overflow-y:auto;">
+    <div style="max-width:900px; margin:auto; background:#0a0a0a; padding:20px; border:1px solid #333; border-radius:10px;">
         <button onclick="raporKapat()" style="float:right; background:var(--red); color:#fff; border:none; padding:10px; border-radius:5px;">KAPAT</button>
-        <h2 style="color:var(--gold); font-family:'Orbitron';">SORGULAMA</h2>
+        <h2 style="color:var(--gold); font-family:'Orbitron';">SORGULAMA & PERSONEL</h2>
+        
+        <!-- Personel Yönetimi Bölümü -->
+        <div class="glass" style="margin-bottom:20px; border-color:var(--n-blue);">
+            <h4 style="margin:0 0 10px 0; color:var(--n-blue);">PERSONEL YÖNETİMİ</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 100px; gap:5px;">
+                <input type="text" id="p-ad" placeholder="Ad" style="margin:0;">
+                <input type="text" id="p-sifre" placeholder="Şifre" style="margin:0;">
+                <button onclick="personelEkle()" class="action-btn" style="background:var(--n-blue); color:#000; margin:0;">EKLE</button>
+            </div>
+            <div id="personel-listesi" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:5px;"></div>
+        </div>
+
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><input type="date" id="r-bas"><input type="date" id="r-bit"></div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><select id="r-personel"><option value="Hepsi">Tüm Personeller</option></select><select id="r-sube"><option value="Hepsi">Tüm Şubeler</option><option value="CADDEPS 1">CADDEPS 1</option><option value="CADDEPS 2">CADDEPS 2</option></select></div>
-        <button onclick="sorgula()" class="action-btn" style="background:var(--n-blue); color:#000;">LİSTELE</button>
-        <div id="r-liste" class="log-box"></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <select id="r-personel"><option value="Hepsi">Tüm Personeller</option></select>
+            <select id="r-sube"><option value="Hepsi">Tüm Şubeler</option><option value="CADDEPS 1">CADDEPS 1</option><option value="CADDEPS 2">CADDEPS 2</option></select>
+        </div>
+        <button onclick="sorgula()" class="action-btn" style="background:var(--n-blue); color:#000;">LİSTELE (GEÇMİŞİ GÖR)</button>
+        
+        <div id="r-liste" class="log-box" style="height:300px;"></div>
     </div>
 </div>
 
@@ -114,10 +135,7 @@
 
     (function init() {
         const session = localStorage.getItem(SESSION_KEY);
-        db.collection("personeller").get().then(snap => {
-            const sel = document.getElementById('r-personel');
-            snap.forEach(doc => { sel.innerHTML += `<option value="${doc.data().ad.toLowerCase()}">${doc.data().ad.toUpperCase()}</option>`; });
-        });
+        personelListesiniGetir();
         if(session) {
             const s = JSON.parse(session);
             userRole = s.role; currentUserName = s.name.toLowerCase();
@@ -164,12 +182,8 @@
             snap.forEach(doc => {
                 const d = doc.data();
                 docs.push({id: doc.id, ...d});
-                
-                // Toplam Kasa (Sadece Aktifler)
                 if(d.tip === "Nakit" || d.tip === "Kart" || d.tip === "Havale") tKasa += d.miktar;
                 if(d.tip === "Gider") tKasa -= d.miktar;
-
-                // Vardiya (Sadece Aktif ve Açık olanlar)
                 if(d.ekleyen === currentUserName && d.v_durum === "acik") {
                     if(d.tip === "Nakit") tvn += d.miktar;
                     if(d.tip === "Kart" || d.tip === "Havale") tvk += d.miktar;
@@ -197,21 +211,6 @@
         unsubs.push(u1, u2);
     }
 
-    async function kasaSifirla() {
-        if(!confirm("DİKKAT: Kasayı sıfırladığınızda tüm aktif işlemler arşive alınır ve yeni bir güne başlarsınız. Emin misiniz?")) return;
-        const sube = document.getElementById('i-sube').value;
-        const snap = await db.collection("islemler").where("sube","==",sube).where("durum","==","aktif").get();
-        const batch = db.batch();
-        snap.forEach(doc => {
-            // Borçlar hariç her şeyi arşive çekiyoruz ki kasa sıfırlansın
-            if(doc.data().tip !== "Borç") {
-                batch.update(doc.ref, {durum: "arsiv"});
-            }
-        });
-        await batch.commit();
-        alert("Kasa başarıyla sıfırlandı.");
-    }
-
     async function kaydet() {
         const m = parseFloat(document.getElementById('i-miktar').value);
         if(!m) return;
@@ -219,25 +218,83 @@
         document.getElementById('i-miktar').value = ""; document.getElementById('i-not').value = "";
     }
 
+    async function kasaSifirla() {
+        if(!confirm("Kasa sıfırlansın mı? (Sadece aktif işlemler arşive gidecek)")) return;
+        const sube = document.getElementById('i-sube').value;
+        const snap = await db.collection("islemler").where("sube","==",sube).where("durum","==","aktif").get();
+        const batch = db.batch();
+        snap.forEach(doc => { if(doc.data().tip !== "Borç") batch.update(doc.ref, {durum: "arsiv"}); });
+        await batch.commit();
+        alert("Kasa sıfırlandı.");
+    }
+
+    async function vardiyaBitir() {
+        if(vn === 0 && vk === 0 && vg === 0) return alert("İşlem yok.");
+        const sube = document.getElementById('i-sube').value;
+        const text = `*🏁 VARDİYA RAPORU*%0A*👤:* ${currentUserName.toUpperCase()}%0A*📍:* ${sube}%0A*💵 Nakit:* ${vn}₺%0A*💳 Kart:* ${vk}₺%0A*📉 Gider:* ${vg}₺%0A*💰 Toplam:* ${vn+vk}₺`;
+        const snap = await db.collection("islemler").where("sube","==",sube).where("ekleyen","==",currentUserName).where("v_durum","==","acik").get();
+        const batch = db.batch();
+        snap.forEach(doc => batch.update(doc.ref, {v_durum: "teslim"}));
+        await batch.commit();
+        window.location.href = `https://api.whatsapp.com/send?phone=${PATRON_TEL}&text=${text}`;
+    }
+
+    // PERSONEL YÖNETİMİ FONKSİYONLARI
+    async function personelEkle() {
+        const ad = document.getElementById('p-ad').value.trim().toLowerCase();
+        const sifre = document.getElementById('p-sifre').value.trim();
+        if(!ad || !sifre) return alert("Eksik bilgi!");
+        await db.collection("personeller").add({ ad, sifre });
+        document.getElementById('p-ad').value = ""; document.getElementById('p-sifre').value = "";
+        personelListesiniGetir();
+    }
+
+    async function personelSil(id) {
+        if(confirm("Personeli silmek istediğine emin misin?")) {
+            await db.collection("personeller").doc(id).delete();
+            personelListesiniGetir();
+        }
+    }
+
+    async function personelListesiniGetir() {
+        const snap = await db.collection("personeller").get();
+        let html = "";
+        const sel = document.getElementById('r-personel');
+        sel.innerHTML = '<option value="Hepsi">Tüm Personeller</option>';
+        snap.forEach(doc => {
+            const d = doc.data();
+            html += `<div style="background:#222; padding:5px 10px; border-radius:5px; font-size:12px;">${d.ad.toUpperCase()} <span onclick="personelSil('${doc.id}')" style="color:red; cursor:pointer; margin-left:10px;">X</span></div>`;
+            sel.innerHTML += `<option value="${d.ad.toLowerCase()}">${d.ad.toUpperCase()}</option>`;
+        });
+        document.getElementById('personel-listesi').innerHTML = html;
+    }
+
+    async function sorgula() {
+        const b = new Date(document.getElementById('r-bas').value).getTime();
+        const s = new Date(document.getElementById('r-bit').value).setHours(23,59,59);
+        const pers = document.getElementById('r-personel').value;
+        const sube = document.getElementById('r-sube').value;
+        if(!b || !s) return alert("Tarih seç!");
+        
+        // ÖNEMLİ: Burada hem 'aktif' hem 'arsiv' olanları görmesi için durum filtresi koymuyoruz
+        const snap = await db.collection("islemler").where("tarih",">=",b).where("tarih","<=",s).get();
+        let h = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            if((pers === "Hepsi" || d.ekleyen === pers) && (sube === "Hepsi" || d.sube === sube)) {
+                h += `<div class="islem-satir"><span><b>${d.miktar}₺</b> - ${d.not}</span> <small>${d.tip} (${d.ekleyen})</small></div>`;
+            }
+        });
+        document.getElementById('r-liste').innerHTML = h || "Kayıt bulunamadı.";
+    }
+
     async function borcOde(id, m, n, odemeTipi) {
         await db.collection("islemler").doc(id).update({durum:"odendi"});
         await db.collection("islemler").add({ miktar: m, tip: odemeTipi, sube: document.getElementById('i-sube').value, not: "[BORÇ TAHSİL] " + n, tarih: Date.now(), durum: "aktif", v_durum: "acik", ekleyen: currentUserName });
     }
 
-    async function vardiyaBitir() {
-        if(vn === 0 && vk === 0 && vg === 0) { alert("İşlem yok."); return; }
-        const sube = document.getElementById('i-sube').value;
-        const raporText = `*🏁 VARDİYA RAPORU*%0A*👤:* ${currentUserName.toUpperCase()}%0A*📍:* ${sube}%0A──────────────%0A*💵 Nakit:* ${vn}₺%0A*💳 Kart:* ${vk}₺%0A*📉 Gider:* ${vg}₺%0A*💰 Toplam:* ${vn+vk}₺%0A──────────────%0A*⏰:* ${new Date().toLocaleTimeString('tr-TR')}`;
-
-        const snap = await db.collection("islemler").where("sube","==",sube).where("ekleyen","==",currentUserName).where("v_durum","==","acik").get();
-        const batch = db.batch();
-        snap.forEach(doc => batch.update(doc.ref, {v_durum: "teslim"}));
-        await batch.commit();
-        window.location.href = `https://api.whatsapp.com/send?phone=${PATRON_TEL}&text=${raporText}`;
-    }
-
     function sec(btn) { document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); seciliTip = btn.getAttribute('data-val'); }
-    function raporAc() { document.getElementById('rapor-ekran').classList.remove('gizli'); }
+    function raporAc() { document.getElementById('rapor-ekran').classList.remove('gizli'); personelListesiniGetir(); }
     function raporKapat() { document.getElementById('rapor-ekran').classList.add('gizli'); }
     function cikisYap() { localStorage.removeItem(SESSION_KEY); location.reload(); }
     setInterval(() => { document.getElementById('saat').innerText = new Date().toLocaleTimeString('tr-TR', {hour:'2-digit', minute:'2-digit'}); }, 1000);
